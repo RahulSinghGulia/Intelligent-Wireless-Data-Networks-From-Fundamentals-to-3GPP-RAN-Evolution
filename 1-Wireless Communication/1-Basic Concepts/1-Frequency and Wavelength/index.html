@@ -14,6 +14,9 @@
             src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
     
+    <!-- Chart.js for enhanced wave plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -44,10 +47,10 @@
             border-radius: 0.5rem;
             margin-top: 1.5rem;
             margin-bottom: 1.5rem;
-            font-family: 'Inter', monospace; /* Use monospace for formulas for clarity */
+            font-family: 'Inter', monospace;
             font-size: 1.125rem; /* lg text size */
             color: #0c4a6e; /* sky-900 */
-            overflow-x: auto; /* Allow horizontal scrolling for long formulas on small screens */
+            overflow-x: auto;
         }
         .input-group {
             display: flex;
@@ -55,24 +58,26 @@
             margin-bottom: 1rem;
         }
         .input-group label {
-            width: 120px; /* Fixed width for labels */
+            width: 120px;
             font-weight: 500;
             color: #475569; /* slate-600 */
         }
         .input-group input {
             flex-grow: 1;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #cbd5e1; /* slate-300 */
+            padding: 0.75rem; /* Increased padding for better touch targets */
+            border: 1px solid #cbd5e1;
             border-radius: 0.375rem;
             outline: none;
             transition: border-color 0.2s;
+            font-size: 1rem;
         }
         .input-group input:focus {
-            border-color: #3b82f6; /* blue-500 */
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
         .plot-container {
             width: 100%;
-            max-width: 600px; /* Limit plot width */
+            max-width: 800px; /* Slightly larger for better visibility */
             margin: 2rem auto;
             background-color: #fff;
             border-radius: 0.5rem;
@@ -82,26 +87,129 @@
         .plot-canvas {
             display: block;
             width: 100%;
-            height: 300px; /* Fixed height for the plot */
+            height: 300px;
         }
         .svg-diagram {
             display: block;
             margin: 2rem auto;
             max-width: 100%;
-            height: auto; /* Maintain aspect ratio */
-            border: 1px solid #e2e8f0; /* slate-200 */
+            height: auto;
+            border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        /* Spectrum visualization */
+        .spectrum {
+            height: 60px;
+            width: 100%;
+            border-radius: 4px;
+            margin: 1rem 0;
+            background: linear-gradient(to right, 
+                #9400D3, #4B0082, #0000FF, #00FF00, #FFFF00, #FF7F00, #FF0000);
+        }
+        /* Sound visualization */
+        .sound-visualization {
+            height: 100px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: #f1f5f9;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        .sound-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background-color: #3b82f6;
+            border-radius: 2px 2px 0 0;
+        }
+        /* Unit converter */
+        .unit-converter {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .unit-converter select {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid #cbd5e1;
+        }
+        /* Tab system for EM spectrum */
+        .tab-container {
+            margin-top: 1rem;
+        }
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .tab-button {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #475569;
+        }
+        .tab-button.active {
+            border-bottom-color: #3b82f6;
+            color: #1e40af;
+        }
+        .tab-content {
+            display: none;
+            padding: 1rem 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* High contrast mode toggle */
+        .contrast-toggle {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
         }
     </style>
 </head>
 <body class="leading-relaxed">
 
+    <!-- High contrast toggle -->
+    <button id="contrastToggle" class="contrast-toggle" aria-label="Toggle high contrast mode">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
+        </svg>
+    </button>
+
     <!-- Header -->
     <header class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16 px-4 sm:px-6 lg:px-8 shadow-xl rounded-b-lg">
         <div class="container mx-auto text-center">
             <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-                🌊 Understanding Frequency and Wavelength 📡
+                <span role="img" aria-label="Wave">🌊</span> Understanding Frequency and Wavelength <span role="img" aria-label="Antenna">📡</span>
             </h1>
             <p class="text-lg md:text-xl max-w-3xl mx-auto opacity-90">
                 Explore the fundamental properties of waves that govern everything from light and sound to radio communication.
@@ -115,17 +223,26 @@
         <section id="introduction" class="mb-16 bg-white p-8 rounded-lg shadow-md">
             <h2 class="section-title text-3xl">Introduction to Waves</h2>
             <p class="text-gray-700 mb-4">
-                In physics, a **wave** is a disturbance that transfers energy through a medium (or through space, in the case of electromagnetic waves) without necessarily transferring matter. Think of ripples expanding on a pond, the sound traveling from a speaker, or the invisible radio signals that bring you internet. All these phenomena are governed by wave principles.
+                In physics, a <strong>wave</strong> is a disturbance that transfers energy through a medium (or through space, in the case of electromagnetic waves) without necessarily transferring matter. Think of ripples expanding on a pond, the sound traveling from a speaker, or the invisible radio signals that bring you internet. All these phenomena are governed by wave principles.
             </p>
             <p class="text-gray-700">
-                Two of the most fundamental characteristics that describe any wave are its **frequency** and **wavelength**. Understanding these concepts is crucial for comprehending how different types of waves behave and how they are utilized in various technologies, from telecommunications to medical imaging.
+                Two of the most fundamental characteristics that describe any wave are its <strong>frequency</strong> and <strong>wavelength</strong>. Understanding these concepts is crucial for comprehending how different types of waves behave and how they are utilized in various technologies, from telecommunications to medical imaging.
             </p>
-            <!-- Generic Wave SVG Illustration -->
-            <svg class="svg-diagram" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+            
+            <!-- Generic Wave SVG Illustration with aria-label -->
+            <svg class="svg-diagram" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" aria-labelledby="waveDiagramTitle waveDiagramDesc">
+                <title id="waveDiagramTitle">Generic Wave Diagram</title>
+                <desc id="waveDiagramDesc">Illustration showing a sine wave pattern with amplitude and wavelength marked</desc>
                 <rect width="100%" height="100%" fill="#e0f2fe"/>
                 <line x1="0" y1="150" x2="600" y2="150" stroke="#64748b" stroke-width="2"/>
                 <path d="M0 150 Q150 50 300 150 T600 150" fill="none" stroke="#3b82f6" stroke-width="4"/>
                 <text x="300" y="200" font-family="Inter" font-size="20" fill="#0c4a6e" text-anchor="middle">A Generic Wave</text>
+                
+                <!-- Amplitude markers -->
+                <line x1="150" y1="50" x2="150" y2="150" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="4 2"/>
+                <text x="170" y="100" font-family="Inter" font-size="16" fill="#1e3a8a">Amplitude</text>
+                <line x1="140" y1="50" x2="160" y2="50" stroke="#1e3a8a" stroke-width="2"/>
+                <line x1="140" y1="150" x2="160" y2="150" stroke="#1e3a8a" stroke-width="2"/>
             </svg>
             <p class="text-sm text-center text-gray-500 mt-2">
                 A visual representation of a wave, showing its oscillating nature around a central equilibrium.
@@ -134,33 +251,42 @@
 
         <!-- Wavelength Section -->
         <section id="wavelength" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">Wavelength ($$\lambda$$)</h2>
+            <h2 class="section-title text-3xl">Wavelength ($\lambda$)</h2>
             <p class="text-gray-700 mb-4">
-                The **wavelength** ($$\lambda$$) of a wave is the spatial period of the wave – the distance over which the wave's shape repeats. Imagine a snapshot of a wave in time: the wavelength is the distance between two consecutive corresponding points on the wave, such as two successive crests, troughs, or zero crossings.
+                The <strong>wavelength</strong> ($\lambda$) of a wave is the spatial period of the wave – the distance over which the wave's shape repeats. Imagine a snapshot of a wave in time: the wavelength is the distance between two consecutive corresponding points on the wave, such as two successive crests, troughs, or zero crossings.
             </p>
             <p class="text-gray-700 mb-4">
                 It's essentially the "length" of one complete cycle of the wave.
             </p>
             <div class="formula-box">
-                **Unit:** Meters (m)
+                <strong>Unit:</strong> Meters (m) or appropriate subunits (nm, μm, cm, km)
             </div>
             <p class="text-gray-700">
                 A longer wavelength means the wave is more "stretched out," while a shorter wavelength indicates a more "compressed" wave. For example, radio waves have very long wavelengths (meters to kilometers), while X-rays have extremely short wavelengths (picometers).
             </p>
-            <!-- Wavelength Diagram SVG -->
-            <svg class="svg-diagram" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+            
+            <!-- Wavelength Diagram SVG with aria-label -->
+            <svg class="svg-diagram" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg" aria-labelledby="wavelengthDiagramTitle wavelengthDiagramDesc">
+                <title id="wavelengthDiagramTitle">Wavelength Diagram</title>
+                <desc id="wavelengthDiagramDesc">Illustration showing wavelength measurement between two wave crests</desc>
                 <rect width="100%" height="100%" fill="#e0f2fe"/>
                 <line x1="0" y1="125" x2="600" y2="125" stroke="#64748b" stroke-width="2"/>
                 <path d="M0 125 Q75 25 150 125 T300 125 T450 125 T600 125" fill="none" stroke="#3b82f6" stroke-width="4"/>
+                
                 <!-- Wavelength markers (crests) -->
                 <line x1="75" y1="25" x2="75" y2="125" stroke="#1e3a8a" stroke-width="2" stroke-dasharray="4 2"/>
                 <line x1="225" y1="25" x2="225" y2="125" stroke="#1e3a8a" stroke-width="2" stroke-dasharray="4 2"/>
+                
                 <!-- Wavelength arrow -->
                 <line x1="75" y1="170" x2="225" y2="170" stroke="#1e3a8a" stroke-width="2"/>
                 <polyline points="75,165 75,175 225,175 225,165" fill="none" stroke="#1e3a8a" stroke-width="2"/>
                 <polygon points="75,170 80,165 80,175" fill="#1e3a8a"/>
                 <polygon points="225,170 220,165 220,175" fill="#1e3a8a"/>
                 <text x="150" y="200" font-family="Inter" font-size="18" fill="#1e3a8a" text-anchor="middle">Wavelength ($\lambda$)</text>
+                
+                <!-- Crest label -->
+                <text x="75" y="15" font-family="Inter" font-size="14" fill="#1e3a8a" text-anchor="middle">Crest</text>
+                <circle cx="75" cy="25" r="3" fill="#1e3a8a"/>
             </svg>
             <p class="text-sm text-center text-gray-500 mt-2">
                 Illustration showing the wavelength as the distance between two consecutive crests of a wave.
@@ -171,23 +297,28 @@
         <section id="frequency" class="mb-16 bg-white p-8 rounded-lg shadow-md">
             <h2 class="section-title text-3xl">Frequency (f)</h2>
             <p class="text-gray-700 mb-4">
-                The **frequency** ($f$) of a wave is the number of complete cycles (or oscillations) that pass a given point in one second. It tells us how often a wave repeats itself.
+                The <strong>frequency</strong> ($f$) of a wave is the number of complete cycles (or oscillations) that pass a given point in one second. It tells us how often a wave repeats itself.
             </p>
             <p class="text-gray-700 mb-4">
                 A high frequency means many wave cycles pass by per second, while a low frequency means fewer cycles pass by.
             </p>
             <div class="formula-box">
-                **Unit:** Hertz (Hz), which is equivalent to cycles per second ($s^{-1}$)
+                <strong>Unit:</strong> Hertz (Hz), which is equivalent to cycles per second ($s^{-1}$)
             </div>
             <p class="text-gray-700">
                 For instance, a sound wave with a high frequency corresponds to a high-pitched sound, and a low-frequency sound wave corresponds to a low-pitched sound. In radio, different frequencies are used to carry different channels of information.
             </p>
-            <!-- Frequency Diagram SVG -->
-            <svg class="svg-diagram" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg">
+            
+            <!-- Frequency Diagram SVG with aria-label -->
+            <svg class="svg-diagram" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg" aria-labelledby="frequencyDiagramTitle frequencyDiagramDesc">
+                <title id="frequencyDiagramTitle">Frequency Diagram</title>
+                <desc id="frequencyDiagramDesc">Illustration showing frequency measurement over time</desc>
                 <rect width="100%" height="100%" fill="#e0f2fe"/>
                 <line x1="0" y1="125" x2="600" y2="125" stroke="#64748b" stroke-width="2"/>
+                
                 <!-- High Frequency Wave -->
                 <path d="M0 125 Q37.5 50 75 125 T150 125 T225 125 T300 125 T375 125 T450 125 T525 125 T600 125" fill="none" stroke="#3b82f6" stroke-width="4"/>
+                
                 <!-- Time interval marker -->
                 <line x1="100" y1="200" x2="500" y2="200" stroke="#1e3a8a" stroke-width="2"/>
                 <polyline points="100,195 100,205 500,205 500,195" fill="none" stroke="#1e3a8a" stroke-width="2"/>
@@ -195,17 +326,51 @@
                 <polygon points="500,200 495,195 495,205" fill="#1e3a8a"/>
                 <text x="300" y="225" font-family="Inter" font-size="18" fill="#1e3a8a" text-anchor="middle">Time Interval (e.g., 1 second)</text>
                 <text x="300" y="90" font-family="Inter" font-size="18" fill="#1e3a8a" text-anchor="middle">Multiple Cycles = High Frequency</text>
+                
+                <!-- Cycle counter -->
+                <text x="50" y="50" font-family="Inter" font-size="14" fill="#1e3a8a">8 cycles</text>
             </svg>
             <p class="text-sm text-center text-gray-500 mt-2">
                 Illustration showing frequency as the number of wave cycles passing a point per unit time.
             </p>
+            
+            <!-- Sound Wave Visualization -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-slate-800 mb-2">Sound Frequency Demonstration</h3>
+                <p class="text-gray-700 mb-4">
+                    Adjust the frequency to hear how pitch changes (requires browser audio support):
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 items-center mb-4">
+                    <label for="soundFrequency" class="font-medium text-slate-700 min-w-[120px]">Frequency:</label>
+                    <input type="range" id="soundFrequency" min="100" max="2000" step="10" value="440" class="flex-grow">
+                    <span id="soundFrequencyValue" class="font-semibold text-blue-600 min-w-[80px] text-right">440 Hz</span>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button id="playSoundBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow-lg transition-colors">
+                        Play Sound
+                    </button>
+                    <button id="stopSoundBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow-lg transition-colors">
+                        Stop Sound
+                    </button>
+                </div>
+                
+                <div class="sound-visualization mt-4" id="soundVisualization">
+                    <!-- Sound bars will be generated by JavaScript -->
+                </div>
+                
+                <p class="text-sm text-gray-500 mt-2">
+                    Note: This demo uses the Web Audio API. Some browsers may require user interaction first.
+                </p>
+            </div>
         </section>
 
         <!-- Wave Speed and Relationship Section -->
         <section id="wave-speed" class="mb-16 bg-white p-8 rounded-lg shadow-md">
             <h2 class="section-title text-3xl">Wave Speed and Their Relationship</h2>
             <p class="text-gray-700 mb-4">
-                The **speed** ($v$) at which a wave travels through a medium is directly related to its frequency and wavelength. This relationship is one of the most fundamental equations in wave physics:
+                The <strong>speed</strong> ($v$) at which a wave travels through a medium is directly related to its frequency and wavelength. This relationship is one of the most fundamental equations in wave physics:
             </p>
             <div class="formula-box">
                 $$v = f \cdot \lambda$$
@@ -220,19 +385,26 @@
                 This formula highlights an inverse relationship between frequency and wavelength for a constant wave speed. If the wave speed remains constant (as it often does in a specific medium), then a higher frequency implies a shorter wavelength, and a lower frequency implies a longer wavelength.
             </p>
             <p class="text-gray-700">
-                A notable example is the speed of light in a vacuum, denoted by $c$, which is approximately $3 \times 10^8$ meters per second. All electromagnetic waves (radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, gamma rays) travel at this speed in a vacuum. This means for light, $$c = f \cdot \lambda$$.
+                A notable example is the speed of light in a vacuum, denoted by $c$, which is approximately $3 \times 10^8$ meters per second. All electromagnetic waves (radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, gamma rays) travel at this speed in a vacuum. This means for light, $c = f \cdot \lambda$.
             </p>
 
             <div class="plot-container">
                 <h3 class="text-xl font-semibold text-slate-800 mb-4 text-center">Visualizing Wave Properties</h3>
-                <canvas id="wavePlot" class="plot-canvas"></canvas>
-                <div class="flex justify-center items-center mt-4 space-x-4">
-                    <label for="plotFrequency" class="font-medium text-slate-700">Frequency:</label>
-                    <input type="range" id="plotFrequency" min="0.5" max="5" step="0.1" value="1" class="w-32">
-                    <span id="plotFrequencyValue" class="font-semibold text-blue-600">1 Hz</span>
+                <canvas id="wavePlot" class="plot-canvas" aria-label="Interactive wave visualization chart"></canvas>
+                <div class="flex flex-col sm:flex-row justify-center items-center mt-4 gap-4">
+                    <div class="flex items-center">
+                        <label for="plotFrequency" class="font-medium text-slate-700 mr-2">Frequency:</label>
+                        <input type="range" id="plotFrequency" min="0.5" max="5" step="0.1" value="1" class="w-32">
+                        <span id="plotFrequencyValue" class="font-semibold text-blue-600 ml-2 min-w-[50px]">1 Hz</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="plotSpeed" class="font-medium text-slate-700 mr-2">Speed:</label>
+                        <input type="range" id="plotSpeed" min="50" max="200" step="10" value="100" class="w-32">
+                        <span id="plotSpeedValue" class="font-semibold text-blue-600 ml-2 min-w-[50px]">100 m/s</span>
+                    </div>
                 </div>
                 <p class="text-sm text-center text-gray-500 mt-2">
-                    Adjust the slider to see how changing frequency affects the wavelength (assuming constant wave speed).
+                    Adjust the sliders to see how changing frequency and speed affect the wavelength.
                 </p>
             </div>
         </section>
@@ -241,25 +413,46 @@
         <section id="calculator" class="mb-16 bg-white p-8 rounded-lg shadow-md">
             <h2 class="section-title text-3xl">Interactive Wave Calculator</h2>
             <p class="text-gray-700 mb-4">
-                **Enter exactly two values** to calculate the third.
+                <strong>Enter exactly two values</strong> to calculate the third. You can also convert between units.
             </p>
             <div class="max-w-md mx-auto p-6 bg-gray-50 rounded-lg shadow-inner">
                 <div class="input-group">
                     <label for="speed">Wave Speed ($v$):</label>
-                    <input type="number" id="speed" placeholder="m/s">
-                    <span class="ml-2 text-gray-600">m/s</span>
+                    <input type="number" id="speed" placeholder="m/s" aria-label="Wave speed input">
+                    <div class="unit-converter">
+                        <select id="speedUnit" aria-label="Wave speed unit selector">
+                            <option value="m/s">m/s</option>
+                            <option value="km/s">km/s</option>
+                            <option value="mph">mph</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="frequency">Frequency ($f$):</label>
-                    <input type="number" id="frequency" placeholder="Hz">
-                    <span class="ml-2 text-gray-600">Hz</span>
+                    <input type="number" id="frequency" placeholder="Hz" aria-label="Frequency input">
+                    <div class="unit-converter">
+                        <select id="frequencyUnit" aria-label="Frequency unit selector">
+                            <option value="Hz">Hz</option>
+                            <option value="kHz">kHz</option>
+                            <option value="MHz">MHz</option>
+                            <option value="GHz">GHz</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="input-group">
-                    <label for="wavelength">Wavelength ($$\lambda$$):</label>
-                    <input type="number" id="wavelength" placeholder="m">
-                    <span class="ml-2 text-gray-600">m</span>
+                    <label for="wavelength">Wavelength ($\lambda$):</label>
+                    <input type="number" id="wavelength" placeholder="m" aria-label="Wavelength input">
+                    <div class="unit-converter">
+                        <select id="wavelengthUnit" aria-label="Wavelength unit selector">
+                            <option value="m">m</option>
+                            <option value="cm">cm</option>
+                            <option value="mm">mm</option>
+                            <option value="nm">nm</option>
+                            <option value="km">km</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="flex justify-center mt-6 space-x-4">
+                <div class="flex flex-col sm:flex-row justify-center mt-6 gap-4">
                     <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-colors">
                         Calculate
                     </button>
@@ -267,8 +460,84 @@
                         Clear
                     </button>
                 </div>
-                <div id="result" class="mt-8 p-4 bg-blue-50 text-blue-800 rounded-lg text-center font-semibold hidden">
+                <div id="result" class="mt-8 p-4 bg-blue-50 text-blue-800 rounded-lg text-center font-semibold hidden" aria-live="polite">
                     <!-- Calculation result will be displayed here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Electromagnetic Spectrum Section -->
+        <section id="em-spectrum" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Electromagnetic Spectrum</h2>
+            <p class="text-gray-700 mb-4">
+                The electromagnetic spectrum encompasses all possible frequencies of electromagnetic radiation, from extremely low frequency radio waves to high-energy gamma rays. All these waves travel at the speed of light in a vacuum ($c \approx 3 \times 10^8$ m/s), but differ in their wavelength and frequency.
+            </p>
+            
+            <!-- Spectrum Visualization -->
+            <div class="spectrum" aria-label="Visible light spectrum from violet to red"></div>
+            <p class="text-sm text-center text-gray-500 mb-6">
+                Visible light spectrum (wavelengths from ~400nm to ~700nm)
+            </p>
+            
+            <!-- Tabbed EM Spectrum Information -->
+            <div class="tab-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="radio">Radio</button>
+                    <button class="tab-button" data-tab="microwave">Microwave</button>
+                    <button class="tab-button" data-tab="infrared">Infrared</button>
+                    <button class="tab-button" data-tab="visible">Visible</button>
+                    <button class="tab-button" data-tab="ultraviolet">UV</button>
+                    <button class="tab-button" data-tab="xray">X-ray</button>
+                    <button class="tab-button" data-tab="gamma">Gamma</button>
+                </div>
+                
+                <div class="tab-content active" id="radio-tab">
+                    <h4 class="font-semibold text-lg mb-2">Radio Waves</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: 3 kHz - 300 GHz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: 100 km - 1 mm</p>
+                    <p class="text-gray-700">Used for: Radio/TV broadcasting, mobile phones, Wi-Fi, radar</p>
+                </div>
+                
+                <div class="tab-content" id="microwave-tab">
+                    <h4 class="font-semibold text-lg mb-2">Microwaves</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: 300 MHz - 300 GHz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: 1 m - 1 mm</p>
+                    <p class="text-gray-700">Used for: Microwave ovens, satellite communications, radar</p>
+                </div>
+                
+                <div class="tab-content" id="infrared-tab">
+                    <h4 class="font-semibold text-lg mb-2">Infrared</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: 300 GHz - 400 THz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: 1 mm - 700 nm</p>
+                    <p class="text-gray-700">Used for: Thermal imaging, remote controls, night vision</p>
+                </div>
+                
+                <div class="tab-content" id="visible-tab">
+                    <h4 class="font-semibold text-lg mb-2">Visible Light</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: 400 THz - 800 THz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: 700 nm - 400 nm</p>
+                    <p class="text-gray-700">Used for: Human vision, photography, optical communication</p>
+                </div>
+                
+                <div class="tab-content" id="ultraviolet-tab">
+                    <h4 class="font-semibold text-lg mb-2">Ultraviolet</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: 800 THz - 30 PHz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: 400 nm - 10 nm</p>
+                    <p class="text-gray-700">Used for: Sterilization, black lights, vitamin D production</p>
+                </div>
+                
+                <div class="tab-content" id="xray-tab">
+                    <h4 class="font-semibold text-lg mb-2">X-rays</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: 30 PHz - 30 EHz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: 10 nm - 10 pm</p>
+                    <p class="text-gray-700">Used for: Medical imaging, security scanning, crystallography</p>
+                </div>
+                
+                <div class="tab-content" id="gamma-tab">
+                    <h4 class="font-semibold text-lg mb-2">Gamma Rays</h4>
+                    <p class="text-gray-700 mb-2">Frequency range: > 30 EHz</p>
+                    <p class="text-gray-700 mb-2">Wavelength range: < 10 pm</p>
+                    <p class="text-gray-700">Used for: Cancer treatment, sterilization, astrophysics</p>
                 </div>
             </div>
         </section>
@@ -279,19 +548,19 @@
             <div class="grid md:grid-cols-2 gap-8">
                 <div>
                     <h4 class="text-xl font-semibold text-gray-800 mb-2 flex items-center">
-                        💡 Light Waves
+                        <span role="img" aria-label="Light bulb">💡</span> Light Waves
                     </h4>
                     <p class="text-gray-700 mb-4">
                         Visible light is a form of electromagnetic wave. Different colors of light correspond to different frequencies and wavelengths. Red light has a longer wavelength and lower frequency, while violet light has a shorter wavelength and higher frequency. All colors of visible light travel at the speed of light ($c$) in a vacuum.
                     </p>
                     <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
-                        <li>Red Light: $$\lambda \approx 700 \text{ nm}$, $f \approx 4.3 \times 10^{14} \text{ Hz}$$</li>
-                        <li>Violet Light: $$\lambda \approx 400 \text{ nm}$, $f \approx 7.5 \times 10^{14} \text{ Hz}$$</li>
+                        <li>Red Light: $\lambda \approx 700 \text{ nm}$, $f \approx 4.3 \times 10^{14} \text{ Hz}$</li>
+                        <li>Violet Light: $\lambda \approx 400 \text{ nm}$, $f \approx 7.5 \times 10^{14} \text{ Hz}$</li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-xl font-semibold text-gray-800 mb-2 flex items-center">
-                        🔊 Sound Waves
+                        <span role="img" aria-label="Speaker">🔊</span> Sound Waves
                     </h4>
                     <p class="text-gray-700 mb-4">
                         Sound waves are mechanical waves that travel through a medium (like air or water). The pitch of a sound is determined by its frequency – higher frequency means higher pitch. The loudness is related to the wave's amplitude, not its frequency or wavelength. The speed of sound varies depending on the medium (e.g., faster in water than in air).
@@ -304,7 +573,7 @@
                 </div>
                 <div class="md:col-span-2">
                     <h4 class="text-xl font-semibold text-gray-800 mb-2 flex items-center">
-                        📡 Radio Waves
+                        <span role="img" aria-label="Radio tower">📡</span> Radio Waves
                     </h4>
                     <p class="text-gray-700 mb-4">
                         Radio waves are also electromagnetic waves used for communication. Different radio stations broadcast at different frequencies, which means their signals have different wavelengths. Radio waves travel at the speed of light. Your radio receiver is tuned to a specific frequency to pick up that station's signal.
@@ -312,6 +581,36 @@
                     <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
                         <li>FM Radio: Frequencies around $88 \text{ MHz}$ to $108 \text{ MHz}$ (wavelengths of a few meters).</li>
                         <li>AM Radio: Frequencies around $535 \text{ kHz}$ to $1705 \text{ kHz}$ (wavelengths of hundreds of meters).</li>
+                        <li>Wi-Fi (2.4 GHz): $\lambda \approx 12.5 \text{ cm}$</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wave Applications Section -->
+        <section id="applications" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Wave Applications in Technology</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-800 mb-2">Medical Imaging</h4>
+                    <p class="text-gray-700 mb-4">
+                        Different wave types are used for various medical imaging techniques:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2">
+                        <li><strong>Ultrasound:</strong> Uses high-frequency sound waves (2-18 MHz) to create images of internal organs.</li>
+                        <li><strong>X-rays:</strong> Use electromagnetic waves with very short wavelengths to image bones and dense tissues.</li>
+                        <li><strong>MRI:</strong> Uses radio waves in combination with strong magnetic fields.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-800 mb-2">Communication Technologies</h4>
+                    <p class="text-gray-700 mb-4">
+                        Wave properties are fundamental to all communication systems:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2">
+                        <li><strong>Fiber Optics:</strong> Uses total internal reflection of light waves in glass fibers.</li>
+                        <li><strong>5G Networks:</strong> Utilize higher frequency radio waves (millimeter waves) for faster data transfer.</li>
+                        <li><strong>Satellite Communication:</strong> Uses microwave frequencies to transmit through the atmosphere.</li>
                     </ul>
                 </div>
             </div>
@@ -323,6 +622,7 @@
     <footer class="mt-16 bg-gray-800 text-white py-6 text-center rounded-t-lg">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <p>&copy; 2025 Rahul Gulia. All rights reserved. This tutorial is for educational purposes.</p>
+            <p class="mt-2 text-sm text-gray-400">Accessibility features include high contrast mode, keyboard navigation, and ARIA labels.</p>
         </div>
     </footer>
 
@@ -331,21 +631,65 @@
         const speedInput = document.getElementById('speed');
         const frequencyInput = document.getElementById('frequency');
         const wavelengthInput = document.getElementById('wavelength');
+        const speedUnit = document.getElementById('speedUnit');
+        const frequencyUnit = document.getElementById('frequencyUnit');
+        const wavelengthUnit = document.getElementById('wavelengthUnit');
         const calculateBtn = document.getElementById('calculateBtn');
         const clearBtn = document.getElementById('clearBtn');
         const resultDiv = document.getElementById('result');
 
-        // Function to calculate wave properties
+        // Unit conversion factors
+        const speedConversion = {
+            'm/s': 1,
+            'km/s': 1000,
+            'mph': 0.44704
+        };
+        
+        const frequencyConversion = {
+            'Hz': 1,
+            'kHz': 1000,
+            'MHz': 1000000,
+            'GHz': 1000000000
+        };
+        
+        const wavelengthConversion = {
+            'm': 1,
+            'cm': 0.01,
+            'mm': 0.001,
+            'nm': 1e-9,
+            'km': 1000
+        };
+
+        // Function to convert units to base units (SI)
+        function convertToBase(value, unit, conversionTable) {
+            return value * conversionTable[unit];
+        }
+
+        // Function to convert from base units to desired units
+        function convertFromBase(value, unit, conversionTable) {
+            return value / conversionTable[unit];
+        }
+
+        // Function to calculate wave properties with unit conversion
         function calculateWaveProperties() {
-            // Get values, trim whitespace, and convert to number, defaulting to NaN if not a finite number
-            // Added defensive check: (inputElement.value || '') ensures .value is always a string before .trim()
-            const v = Number.isFinite(Number((speedInput.value || '').trim())) ? Number((speedInput.value || '').trim()) : NaN;
-            const f = Number.isFinite(Number((frequencyInput.value || '').trim())) ? Number((frequencyInput.value || '').trim()) : NaN;
-            const l = Number.isFinite(Number((wavelengthInput.value || '').trim())) ? Number((wavelengthInput.value || '').trim()) : NaN;
+            // Get values and units
+            const speedVal = parseFloat(speedInput.value) || NaN;
+            const frequencyVal = parseFloat(frequencyInput.value) || NaN;
+            const wavelengthVal = parseFloat(wavelengthInput.value) || NaN;
+            
+            const speedUnitVal = speedUnit.value;
+            const frequencyUnitVal = frequencyUnit.value;
+            const wavelengthUnitVal = wavelengthUnit.value;
+
+            // Convert all inputs to base units for calculation
+            const v = isNaN(speedVal) ? NaN : convertToBase(speedVal, speedUnitVal, speedConversion);
+            const f = isNaN(frequencyVal) ? NaN : convertToBase(frequencyVal, frequencyUnitVal, frequencyConversion);
+            const l = isNaN(wavelengthVal) ? NaN : convertToBase(wavelengthVal, wavelengthUnitVal, wavelengthConversion);
 
             let calculatedValue;
             let unit;
             let propertyName;
+            let resultUnit;
 
             // Count how many valid numerical inputs are provided
             const inputsProvided = [v, f, l].filter(val => !isNaN(val)).length;
@@ -367,6 +711,8 @@
                 calculatedValue = f * l;
                 propertyName = 'Wave Speed ($v$)';
                 unit = 'm/s';
+                resultUnit = speedUnitVal;
+                calculatedValue = convertFromBase(calculatedValue, resultUnit, speedConversion);
             } else if (isNaN(f) && !isNaN(v) && !isNaN(l)) {
                 // Calculate Frequency (f = v / lambda)
                 if (l === 0) {
@@ -379,6 +725,8 @@
                 calculatedValue = v / l;
                 propertyName = 'Frequency ($f$)';
                 unit = 'Hz';
+                resultUnit = frequencyUnitVal;
+                calculatedValue = convertFromBase(calculatedValue, resultUnit, frequencyConversion);
             } else if (isNaN(l) && !isNaN(v) && !isNaN(f)) {
                 // Calculate Wavelength (lambda = v / f)
                 if (f === 0) {
@@ -391,8 +739,9 @@
                 calculatedValue = v / f;
                 propertyName = 'Wavelength ($\lambda$)';
                 unit = 'm';
+                resultUnit = wavelengthUnitVal;
+                calculatedValue = convertFromBase(calculatedValue, resultUnit, wavelengthConversion);
             } else {
-                // This case should ideally not be hit if inputsProvided !== 2 check works
                 resultDiv.textContent = 'An unexpected error occurred. Please clear and try again.';
                 resultDiv.classList.remove('hidden');
                 resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
@@ -400,8 +749,21 @@
                 return;
             }
 
-            resultDiv.textContent = `${propertyName}: ${calculatedValue.toPrecision(4)} ${unit}`;
+            // Format the result nicely
+            let formattedValue;
+            if (Math.abs(calculatedValue) >= 1000 || Math.abs(calculatedValue) < 0.01) {
+                formattedValue = calculatedValue.toExponential(4);
+            } else {
+                formattedValue = calculatedValue.toFixed(4);
+            }
+
+            resultDiv.innerHTML = `${propertyName} = ${formattedValue} ${resultUnit}`;
             resultDiv.classList.remove('hidden');
+            
+            // Update MathJax rendering
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typeset();
+            }
         }
 
         function clearInputs() {
@@ -409,133 +771,338 @@
             frequencyInput.value = '';
             wavelengthInput.value = '';
             resultDiv.classList.add('hidden');
-            resultDiv.classList.remove('bg-red-100', 'text-red-800'); // Reset error color
+            resultDiv.classList.remove('bg-red-100', 'text-red-800');
         }
 
         calculateBtn.addEventListener('click', calculateWaveProperties);
         clearBtn.addEventListener('click', clearInputs);
 
         // Allow pressing Enter in input fields to trigger calculation
-        speedInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculateWaveProperties(); });
-        frequencyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculateWaveProperties(); });
-        wavelengthInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculateWaveProperties(); });
+        [speedInput, frequencyInput, wavelengthInput].forEach(input => {
+            input.addEventListener('keypress', (e) => { 
+                if (e.key === 'Enter') calculateWaveProperties(); 
+            });
+        });
 
-        // --- Wave Plotting Logic ---
-        const waveCanvas = document.getElementById('wavePlot');
-        const waveCtx = waveCanvas.getContext('2d');
+        // --- Wave Plotting with Chart.js ---
+        const waveCtx = document.getElementById('wavePlot').getContext('2d');
         const plotFrequencySlider = document.getElementById('plotFrequency');
         const plotFrequencyValue = document.getElementById('plotFrequencyValue');
-
-        const WAVE_SPEED_FOR_PLOT = 100; // Arbitrary constant speed for visualization
-        const AMPLITUDE = 50;
-        const X_OFFSET = 50; // Offset from left edge for drawing
-        const Y_OFFSET = waveCanvas.height / 2; // Center Y-axis
-
-        // Function to draw the wave on the canvas
-        function drawWave() {
-            // Adjust canvas resolution for sharper drawing on high-DPI screens
-            const dpi = window.devicePixelRatio || 1;
-            waveCanvas.width = waveCanvas.offsetWidth * dpi;
-            waveCanvas.height = waveCanvas.offsetHeight * dpi;
-            waveCtx.scale(dpi, dpi);
-
-            waveCtx.clearRect(0, 0, waveCanvas.offsetWidth, waveCanvas.offsetHeight); // Clear canvas
-
-            const frequency = parseFloat(plotFrequencySlider.value);
-            const wavelength = WAVE_SPEED_FOR_PLOT / frequency; // Calculate wavelength based on constant speed
-
-            plotFrequencyValue.textContent = `${frequency} Hz`;
-
-            waveCtx.beginPath();
-            waveCtx.strokeStyle = '#3b82f6'; // Blue color for the wave
-            waveCtx.lineWidth = 2;
-
-            // Draw the sine wave
-            for (let x = 0; x < waveCanvas.offsetWidth; x++) {
-                // Adjust angle calculation to account for X_OFFSET and scale
-                const angle = (x - X_OFFSET) / wavelength * (2 * Math.PI);
-                const y = Y_OFFSET - AMPLITUDE * Math.sin(angle);
-                if (x === 0) {
-                    waveCtx.moveTo(x, y);
-                } else {
-                    waveCtx.lineTo(x, y);
+        const plotSpeedSlider = document.getElementById('plotSpeed');
+        const plotSpeedValue = document.getElementById('plotSpeedValue');
+        
+        // Create initial wave data
+        const waveData = {
+            labels: Array.from({length: 100}, (_, i) => i),
+            datasets: [{
+                label: 'Waveform',
+                data: Array(100).fill(0),
+                borderColor: '#3b82f6',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.1
+            }]
+        };
+        
+        // Chart configuration
+        const waveConfig = {
+            type: 'line',
+            data: waveData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Distance (m)',
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Amplitude',
+                            color: '#64748b'
+                        },
+                        min: -100,
+                        max: 100,
+                        grid: {
+                            color: '#e2e8f0'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Amplitude: ${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 300
                 }
             }
-            waveCtx.stroke();
-
-            // Draw X-axis
-            waveCtx.beginPath();
-            waveCtx.strokeStyle = '#64748b'; // Slate-500 for axis
-            waveCtx.lineWidth = 1;
-            waveCtx.moveTo(0, Y_OFFSET);
-            waveCtx.lineTo(waveCanvas.offsetWidth, Y_OFFSET);
-            waveCtx.stroke();
-
-            // Draw labels for wavelength and frequency
-            waveCtx.fillStyle = '#1e3a8a'; // Indigo-800 for text
-            waveCtx.font = '14px Inter';
-            waveCtx.textAlign = 'left'; // Align left for these labels
-
-            // Wavelength label and markers
-            // Ensure at least one full wavelength fits before drawing markers for it
-            if (wavelength > 0 && wavelength * 1.5 < waveCanvas.offsetWidth - X_OFFSET) {
-                const startX = X_OFFSET;
-                // Draw vertical lines at crests
-                waveCtx.beginPath();
-                waveCtx.strokeStyle = '#1e3a8a';
-                waveCtx.lineWidth = 1;
-                waveCtx.setLineDash([5, 5]); // Dashed line
-                // Find the first crest after X_OFFSET
-                const firstCrestX = startX + (wavelength / 4);
-                waveCtx.moveTo(firstCrestX, Y_OFFSET - AMPLITUDE);
-                waveCtx.lineTo(firstCrestX, Y_OFFSET + AMPLITUDE + 5); // Extend line below wave
-                waveCtx.moveTo(firstCrestX + wavelength, Y_OFFSET - AMPLITUDE);
-                waveCtx.lineTo(firstCrestX + wavelength, Y_OFFSET + AMPLITUDE + 5); // Extend line below wave
-                waveCtx.stroke();
-                waveCtx.setLineDash([]); // Reset line dash
-
-                // Draw wavelength arrow
-                waveCtx.beginPath();
-                waveCtx.moveTo(firstCrestX, Y_OFFSET + AMPLITUDE + 10);
-                waveCtx.lineTo(firstCrestX + wavelength, Y_OFFSET + AMPLITUDE + 10);
-                waveCtx.strokeStyle = '#1e3a8a';
-                waveCtx.lineWidth = 2;
-                waveCtx.stroke();
-
-                // Draw arrowheads
-                waveCtx.beginPath();
-                waveCtx.moveTo(firstCrestX, Y_OFFSET + AMPLITUDE + 10);
-                waveCtx.lineTo(firstCrestX + 5, Y_OFFSET + AMPLITUDE + 5);
-                waveCtx.lineTo(firstCrestX + 5, Y_OFFSET + AMPLITUDE + 15);
-                waveCtx.fill();
-
-                waveCtx.beginPath();
-                waveCtx.moveTo(firstCrestX + wavelength, Y_OFFSET + AMPLITUDE + 10);
-                waveCtx.lineTo(firstCrestX + wavelength - 5, Y_OFFSET + AMPLITUDE + 5);
-                waveCtx.lineTo(firstCrestX + wavelength - 5, Y_OFFSET + AMPLITUDE + 15);
-                waveCtx.fill();
-
-                // Wavelength text label below the arrow
-                waveCtx.textAlign = 'center';
-                waveCtx.fillText(`λ = ${wavelength.toFixed(1)} m`, firstCrestX + wavelength / 2, Y_OFFSET + AMPLITUDE + 30);
-            }
-
-            // Top-left labels
-            waveCtx.textAlign = 'left';
-            waveCtx.fillText(`Frequency: ${frequency} Hz`, 10, 20);
-            waveCtx.fillText(`Wavelength: ${(WAVE_SPEED_FOR_PLOT / frequency).toFixed(2)} m`, 10, 40);
-            waveCtx.fillText(`Speed: ${WAVE_SPEED_FOR_PLOT} m/s (constant)`, 10, 60);
-        }
-
-        // Event listener for slider
-        plotFrequencySlider.addEventListener('input', drawWave);
+        };
         
-        // Redraw wave on window resize to ensure responsiveness
-        window.addEventListener('resize', drawWave);
+        // Create the chart
+        const waveChart = new Chart(waveCtx, waveConfig);
+        
+        // Function to update the wave plot
+        function updateWavePlot() {
+            const frequency = parseFloat(plotFrequencySlider.value);
+            const speed = parseFloat(plotSpeedSlider.value);
+            const wavelength = speed / frequency;
+            
+            plotFrequencyValue.textContent = `${frequency} Hz`;
+            plotSpeedValue.textContent = `${speed} m/s`;
+            
+            // Update the chart data
+            const newData = waveData.labels.map(x => {
+                return 80 * Math.sin(2 * Math.PI * frequency * x / speed);
+            });
+            
+            waveChart.data.datasets[0].data = newData;
+            waveChart.options.scales.x.title.text = `Distance (m) | λ = ${wavelength.toFixed(2)} m`;
+            waveChart.update();
+        }
+        
+        // Event listeners for sliders
+        plotFrequencySlider.addEventListener('input', updateWavePlot);
+        plotSpeedSlider.addEventListener('input', updateWavePlot);
+        
+        // Initial plot update
+        updateWavePlot();
 
-        // Initial draw when the page loads
+        // --- Sound Wave Visualization ---
+        const soundFrequencySlider = document.getElementById('soundFrequency');
+        const soundFrequencyValue = document.getElementById('soundFrequencyValue');
+        const playSoundBtn = document.getElementById('playSoundBtn');
+        const stopSoundBtn = document.getElementById('stopSoundBtn');
+        const soundVisualization = document.getElementById('soundVisualization');
+        
+        let audioContext;
+        let oscillator;
+        let isPlaying = false;
+        
+        // Create sound bars for visualization
+        function createSoundBars() {
+            soundVisualization.innerHTML = '';
+            const barCount = 50;
+            const containerWidth = soundVisualization.offsetWidth;
+            const barWidth = Math.max(2, containerWidth / barCount - 2);
+            
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'sound-bar';
+                bar.style.left = `${i * (barWidth + 2)}px`;
+                bar.style.width = `${barWidth}px`;
+                bar.style.height = '0px';
+                soundVisualization.appendChild(bar);
+            }
+        }
+        
+        // Update sound bars animation
+        function updateSoundBars() {
+            if (!isPlaying) return;
+            
+            const bars = document.querySelectorAll('.sound-bar');
+            bars.forEach(bar => {
+                const randomHeight = Math.random() * 80 + 10;
+                bar.style.height = `${randomHeight}px`;
+                bar.style.backgroundColor = `hsl(${Math.random() * 60 + 200}, 80%, 60%)`;
+            });
+            
+            requestAnimationFrame(updateSoundBars);
+        }
+        
+        // Initialize sound system
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                soundFrequencySlider.addEventListener('input', function() {
+                    const freq = parseInt(this.value);
+                    soundFrequencyValue.textContent = `${freq} Hz`;
+                    
+                    if (oscillator) {
+                        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                    }
+                });
+                
+                playSoundBtn.addEventListener('click', function() {
+                    if (isPlaying) return;
+                    
+                    isPlaying = true;
+                    oscillator = audioContext.createOscillator();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(parseInt(soundFrequencySlider.value), audioContext.currentTime);
+                    oscillator.connect(audioContext.destination);
+                    oscillator.start();
+                    
+                    updateSoundBars();
+                    playSoundBtn.disabled = true;
+                    stopSoundBtn.disabled = false;
+                });
+                
+                stopSoundBtn.addEventListener('click', function() {
+                    if (!isPlaying) return;
+                    
+                    isPlaying = false;
+                    if (oscillator) {
+                        oscillator.stop();
+                        oscillator.disconnect();
+                        oscillator = null;
+                    }
+                    
+                    // Reset visualization
+                    const bars = document.querySelectorAll('.sound-bar');
+                    bars.forEach(bar => {
+                        bar.style.height = '0px';
+                    });
+                    
+                    playSoundBtn.disabled = false;
+                    stopSoundBtn.disabled = true;
+                });
+                
+                // Create initial bars
+                createSoundBars();
+                
+                // Handle window resize
+                window.addEventListener('resize', createSoundBars);
+                
+            } catch (e) {
+                console.error('Audio API not supported:', e);
+                playSoundBtn.disabled = true;
+                stopSoundBtn.disabled = true;
+                soundFrequencySlider.disabled = true;
+                document.getElementById('soundVisualization').innerHTML = 
+                    '<p class="text-center text-red-500 p-4">Audio not supported in your browser</p>';
+            }
+        }
+        
+        // Initialize audio on user interaction (required by some browsers)
+        document.addEventListener('click', function initAudioOnInteraction() {
+            initAudio();
+            document.removeEventListener('click', initAudioOnInteraction);
+        }, { once: true });
+        
+        // Update frequency display initially
+        soundFrequencyValue.textContent = `${soundFrequencySlider.value} Hz`;
+
+        // --- EM Spectrum Tabs ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+
+        // --- High Contrast Mode ---
+        const contrastToggle = document.getElementById('contrastToggle');
+        const highContrastStyles = `
+            .high-contrast {
+                --tw-bg-opacity: 1;
+                background-color: rgb(0 0 0 / var(--tw-bg-opacity)) !important;
+                color: rgb(255 255 255 / var(--tw-text-opacity)) !important;
+            }
+            .high-contrast .bg-white {
+                background-color: rgb(0 0 0) !important;
+                color: rgb(255 255 255) !important;
+                border-color: rgb(255 255 255) !important;
+            }
+            .high-contrast .text-gray-700 {
+                color: rgb(255 255 255) !important;
+            }
+            .high-contrast .formula-box {
+                background-color: rgb(0 0 0) !important;
+                border-color: rgb(255 255 0) !important;
+                color: rgb(255 255 0) !important;
+            }
+            .high-contrast .svg-diagram {
+                filter: invert(1) hue-rotate(180deg);
+            }
+            .high-contrast .plot-container {
+                background-color: rgb(0 0 0) !important;
+                border-color: rgb(255 255 255) !important;
+            }
+            .high-contrast .input-group input {
+                background-color: rgb(0 0 0) !important;
+                color: rgb(255 255 255) !important;
+                border-color: rgb(255 255 255) !important;
+            }
+        `;
+        
+        let highContrastMode = false;
+        
+        contrastToggle.addEventListener('click', () => {
+            highContrastMode = !highContrastMode;
+            
+            if (highContrastMode) {
+                // Add high contrast styles
+                const styleElement = document.createElement('style');
+                styleElement.id = 'highContrastStyles';
+                styleElement.innerHTML = highContrastStyles;
+                document.head.appendChild(styleElement);
+                
+                // Add class to body
+                document.body.classList.add('high-contrast');
+                
+                // Update toggle button
+                contrastToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
+                        <path d="M12 6a6 6 0 0 1 0 12"></path>
+                    </svg>
+                `;
+                contrastToggle.setAttribute('aria-label', 'Disable high contrast mode');
+            } else {
+                // Remove high contrast styles
+                const styleElement = document.getElementById('highContrastStyles');
+                if (styleElement) {
+                    styleElement.remove();
+                }
+                
+                // Remove class from body
+                document.body.classList.remove('high-contrast');
+                
+                // Update toggle button
+                contrastToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
+                    </svg>
+                `;
+                contrastToggle.setAttribute('aria-label', 'Enable high contrast mode');
+            }
+        });
+
+        // --- Initialize MathJax ---
         document.addEventListener('DOMContentLoaded', () => {
-            drawWave(); // Draw the initial wave plot
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise().catch(err => console.log('MathJax typeset error:', err));
+            }
         });
     </script>
 </body>
