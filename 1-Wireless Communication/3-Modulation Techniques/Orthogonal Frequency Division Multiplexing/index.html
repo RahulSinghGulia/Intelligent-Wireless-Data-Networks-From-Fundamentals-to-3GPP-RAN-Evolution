@@ -3,965 +3,532 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OFDM (Orthogonal Frequency Division Multiplexing) Tutorial</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- MathJax CDN for LaTeX rendering -->
-    <script type="text/javascript" id="MathJax-script" async
-            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
-    
-    <!-- Chart.js for visualizations -->
+    <title>OFDM System Simulator & Tutorial</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
+        /* Basic Styling (You'd expand this significantly for a full tutorial) */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
             background-color: #f8fafc;
             color: #334155;
+            line-height: 1.6;
         }
-        .section-title {
-            position: relative;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            color: #1e3a8a;
-        }
-        .section-title::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 60px;
-            height: 3px;
-            background-color: #3b82f6;
-            border-radius: 9999px;
-        }
-        .formula-box {
-            background-color: #e0f2fe;
-            border-left: 4px solid #38bdf8;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            margin-top: 1.5rem;
-            margin-bottom: 1.5rem;
-            font-family: 'Inter', monospace;
-            font-size: 1.125rem;
-            color: #0c4a6e;
-            overflow-x: auto;
-        }
-        .plot-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 2rem auto;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background-color: #fff;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        .plot-canvas {
-            display: block;
-            width: 100%;
+
+        h1, h2, h3 {
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        section {
+            background-color: #fff;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
             height: 300px;
+            width: 100%;
+            margin-bottom: 20px;
         }
-        .tab-container {
-            margin-top: 1rem;
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
         }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-right: 20px;
+        }
+
+        .control-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        input[type="range"] {
+            width: 200px;
+            margin-top: 5px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
         .tab-buttons {
             display: flex;
-            border-bottom: 1px solid #cbd5e1;
-            overflow-x: auto;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
         }
+
         .tab-button {
-            padding: 0.5rem 1rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            font-weight: 500;
+            background-color: #f0f4f8;
             color: #475569;
-            white-space: nowrap;
+            border: none;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 8px 8px 0 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0 2px;
         }
+
         .tab-button.active {
-            border-bottom-color: #3b82f6;
-            color: #1e40af;
+            background-color: #007bff;
+            color: white;
+            border-bottom: 2px solid #007bff;
         }
+
+        .tab-button:hover:not(.active) {
+            background-color: #e2e8f0;
+        }
+
         .tab-content {
             display: none;
-            padding: 1rem 0;
+            padding: 20px 0;
         }
+
         .tab-content.active {
             display: block;
         }
-        .contrast-toggle {
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            background: #1e40af;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
+
+        .metrics {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 100;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f4f8;
+            border-radius: 6px;
         }
-        .subcarrier-visualization {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 1rem 0;
-        }
-        .subcarrier {
-            width: 80px;
-            height: 80px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
+
+        .metric-item {
             text-align: center;
-            background-color: #f1f5f9;
-            transition: all 0.2s;
+            font-size: 1.1em;
+            color: #1e293b;
         }
-        .subcarrier.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #1d4ed8;
+
+        .metric-item strong {
+            display: block;
+            font-size: 1.4em;
+            color: #007bff;
+            margin-top: 5px;
         }
-        .ofdm-symbol {
-            width: 100%;
-            height: 100px;
-            background-color: #f1f5f9;
-            border-radius: 4px;
-            margin: 1rem 0;
-            position: relative;
-            overflow: hidden;
+
+        /* High Contrast Mode */
+        body.high-contrast {
+            background-color: #000 !important;
+            color: #fff !important;
         }
-        .signal-bar {
-            position: absolute;
-            bottom: 0;
-            width: 4px;
-            background-color: #3b82f6;
-            border-radius: 2px 2px 0 0;
+        body.high-contrast .container,
+        body.high-contrast section {
+            background-color: #111 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2) !important;
         }
+        body.high-contrast h1,
+        body.high-contrast h2,
+        body.high-contrast h3 {
+            color: #00ff00 !important; /* Green for contrast */
+        }
+        body.high-contrast .tab-button {
+            background-color: #333 !important;
+            color: #eee !important;
+        }
+        body.high-contrast .tab-button.active {
+            background-color: #00ff00 !important;
+            color: #000 !important;
+        }
+        body.high-contrast button {
+            background-color: #00ff00 !important;
+            color: #000 !important;
+            border: 1px solid #00ff00 !important;
+        }
+        body.high-contrast button:hover {
+            background-color: #00aa00 !important;
+        }
+        body.high-contrast .control-group label {
+            color: #00ff00 !important;
+        }
+        body.high-contrast .metrics {
+            background-color: #333 !important;
+        }
+        body.high-contrast .metric-item strong {
+            color: #00ff00 !important;
+        }
+        body.high-contrast input[type="range"] {
+            -webkit-appearance: none;
+            background: #555;
+            height: 8px;
+            border-radius: 5px;
+        }
+        body.high-contrast input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00ff00;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        body.high-contrast input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #00ff00;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
     </style>
 </head>
-<body class="leading-relaxed">
+<body>
+    <div class="container">
+        <header>
+            <h1>OFDM System Interactive Tutorial</h1>
+            <p style="text-align: center;">Explore the fundamentals and challenges of Orthogonal Frequency-Division Multiplexing.</p>
+            <div class="section-header">
+                <h2>Accessibility</h2>
+                <button id="contrastToggle">Toggle High Contrast</button>
+            </div>
+        </header>
 
-    <!-- High contrast toggle -->
-    <button id="contrastToggle" class="contrast-toggle" aria-label="Toggle high contrast mode">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
-        </svg>
-    </button>
+        <section id="introduction">
+            <h2>1. What is OFDM?</h2>
+            <p>Orthogonal Frequency-Division Multiplexing (OFDM) is a method of encoding digital data on multiple carrier frequencies. It's a key technology in modern wireless communication standards like Wi-Fi (802.11), 4G LTE, and 5G. OFDM divides a high-rate data stream into several lower-rate streams, which are then transmitted simultaneously over multiple subcarriers. This makes the system more robust to frequency-selective fading and inter-symbol interference (ISI).</p>
+            <p>The core idea behind OFDM is to achieve orthogonality between subcarriers, meaning that the peak of one subcarrier's spectrum aligns with the nulls of all other subcarriers' spectra. This allows subcarriers to overlap without causing inter-carrier interference (ICI), leading to efficient spectrum utilization.</p>
 
-    <!-- Header -->
-    <header class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16 px-4 sm:px-6 lg:px-8 shadow-xl rounded-b-lg">
-        <div class="container mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-                <span role="img" aria-label="Signal">📶</span> OFDM Tutorial
-            </h1>
-            <p class="text-lg md:text-xl max-w-3xl mx-auto opacity-90">
-                Understanding Orthogonal Frequency Division Multiplexing - The foundation of modern wireless communication
+            <h3>1.1 Subcarrier Visualization: FDM vs. OFDM</h3>
+            <div class="controls">
+                <button id="showTraditionalFdm">Traditional FDM</button>
+                <button id="showOfdm">OFDM (Orthogonal)</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="subcarrierChart"></canvas>
+            </div>
+            <p>Observe how in Traditional FDM, subcarriers are separated by guard bands to prevent interference. In OFDM, subcarriers overlap, but their orthogonality ensures that they can still be uniquely decoded at the receiver.</p>
+        </section>
+
+        <section id="orthogonality">
+            <h2>2. Key Principle: Orthogonality</h2>
+            <p>Orthogonality in OFDM is achieved by precisely spacing the subcarrier frequencies such that at the sampling instant of the FFT/IFFT, each subcarrier has an integer number of cycles within the symbol duration, and all other subcarriers have zero amplitude. This means they do not interfere with each other despite spectral overlap.</p>
+            <div class="controls">
+                <button id="showSingleSubcarrier">Single Subcarrier</button>
+                <button id="showMultipleSubcarriers">Multiple Orthogonal Subcarriers</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="orthogonalityChart"></canvas>
+            </div>
+            <p>The graph above shows the time-domain representation of subcarriers. When multiple subcarriers are orthogonal, they can be separated perfectly using the Fast Fourier Transform (FFT) at the receiver.</p>
+        </section>
+
+        <section id="cyclic-prefix">
+            <h2>3. Mitigating ISI: The Cyclic Prefix (CP)</h2>
+            <p>In wireless channels, signals can arrive at the receiver via multiple paths, leading to time dispersion (multipath delay spread). This can cause Inter-Symbol Interference (ISI) and Inter-Carrier Interference (ICI) if not properly handled.</p>
+            <p>The Cyclic Prefix (CP) is a copy of the end portion of an OFDM symbol that is appended to the beginning of the symbol. It serves two main purposes:</p>
+            <ol>
+                <li>It acts as a **guard interval**, absorbing multipath delays and ensuring that the useful part of the OFDM symbol (after the CP is removed at the receiver) is free from ISI caused by the previous symbol.</li>
+                <li>It converts the linear convolution of the signal with the channel into a **circular convolution**, which can be easily compensated for in the frequency domain using a simple one-tap equalizer for each subcarrier.</li>
+            </ol>
+            <div class="controls">
+                <button id="showWithoutCp">Symbol Without CP</button>
+                <button id="showWithCp">Symbol With CP</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="cyclicPrefixChart"></canvas>
+            </div>
+            <p>Observe how the CP effectively extends the symbol, providing a buffer against delayed versions of the signal arriving at the receiver.</p>
+        </section>
+
+        <section id="ofdm-system">
+            <h2>4. OFDM System Overview</h2>
+            <p>Here, you can simulate a simplified OFDM system and observe the effects of various parameters and noise.</p>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="numSubcarriers">Number of Subcarriers:</label>
+                    <input type="range" id="numSubcarriers" min="8" max="64" value="16" step="8">
+                    <span id="numSubcarriersValue">16 subcarriers</span>
+                </div>
+                <div class="control-group">
+                    <label for="cpRatio">Cyclic Prefix Ratio:</label>
+                    <input type="range" id="cpRatio" min="0" max="0.25" value="0.1" step="0.05">
+                    <span id="cpRatioValue">10%</span>
+                </div>
+                <div class="control-group">
+                    <label for="snr">Signal-to-Noise Ratio (SNR):</label>
+                    <input type="range" id="snr" min="0" max="30" value="20" step="5">
+                    <span id="snrValue">20 dB</span>
+                </div>
+                <button id="transmitBtn">Transmit Signal</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="ofdmSystemChart"></canvas>
+            </div>
+            <p>This chart shows the transmitted and received signals in the time domain, incorporating the effects of noise based on the SNR. Increasing SNR reduces noise and improves signal quality.</p>
+        </section>
+
+        <section id="challenges">
+            <h2>5. OFDM Challenges and Impairments</h2>
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="pap">PAPR</button>
+                <button class="tab-button" data-tab="foffset">Frequency Offset</button>
+                <button class="tab-button" data-tab="timing">Timing Offset</button>
+                <button class="tab-button" data-tab="channel">Channel Estimation</button>
+            </div>
+
+            <div id="pap-tab" class="tab-content active">
+                <h3>5.1 Peak-to-Average Power Ratio (PAPR)</h3>
+                <p>OFDM signals, being a sum of many independent subcarriers, can exhibit a high Peak-to-Average Power Ratio (PAPR). This means the instantaneous power can be much higher than the average power. High PAPR is undesirable because it requires power amplifiers with high linearity, which are expensive and consume more power. This chart illustrates a signal with high PAPR.</p>
+                <div class="chart-container">
+                    <canvas id="paprChart"></canvas>
+                </div>
+                <p>The signal peaks significantly above its average power level, demonstrating the PAPR issue.</p>
+            </div>
+
+            <div id="foffset-tab" class="tab-content">
+                <h3>5.2 Frequency Offset (FO)</h3>
+                <p>Frequency offset, caused by mismatches between transmitter and receiver oscillators or Doppler shifts, leads to a loss of orthogonality between subcarriers. This results in Inter-Carrier Interference (ICI), where power from one subcarrier spills into adjacent ones, degrading performance.</p>
+                <div class="chart-container">
+                    <canvas id="foffsetChart"></canvas>
+                </div>
+                <p>Observe how a frequency offset causes the subcarrier spectra to shift, leading to overlap at non-null points for adjacent subcarriers.</p>
+            </div>
+
+            <div id="timing-tab" class="tab-content">
+                <h3>5.3 Timing Offset (TO)</h3>
+                <p>Accurate symbol synchronization (timing) is crucial in OFDM. A timing offset, where the receiver samples the OFDM symbol at the wrong time, can lead to both Inter-Symbol Interference (ISI) and Inter-Carrier Interference (ICI), especially if the sampling window extends beyond the cyclic prefix or into adjacent symbols.</p>
+                <div class="chart-container">
+                    <canvas id="timingChart"></canvas>
+                </div>
+                <p>This chart demonstrates how a shift in the reception window can distort the received symbol, leading to errors.</p>
+            </div>
+
+            <div id="channel-tab" class="tab-content">
+                <h3>5.4 Channel Estimation and Equalization</h3>
+                <p>Wireless channels introduce distortions (fading, multipath). To correctly decode the received signal, the receiver needs to estimate the channel's characteristics (Channel Frequency Response - CFR) and then apply an equalizer to compensate for these distortions. This chart shows a typical channel response and an estimated response.</p>
+                <div class="chart-container">
+                    <canvas id="channelChart"></canvas>
+                </div>
+                <p>The blue line represents the actual channel response, while the orange line represents the receiver's estimate. Accurate estimation is key for effective equalization.</p>
+            </div>
+        </section>
+
+        <section id="simulation">
+            <h2>6. End-to-End OFDM Simulation</h2>
+            <p>Run a full simulation to see the effects of different modulation schemes, channel conditions, and equalization techniques on the received signal and constellation diagram.</p>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="modulationType">Modulation Type:</label>
+                    <select id="modulationType">
+                        <option value="qpsk">QPSK</option>
+                        <option value="16qam">16-QAM</option>
+                        <option value="64qam">64-QAM</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="channelType">Channel Type:</label>
+                    <select id="channelType">
+                        <option value="awgn">AWGN</option>
+                        <option value="rayleigh">Rayleigh Fading</option>
+                        <option value="multipath">Multipath</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="equalizerType">Equalizer Type:</label>
+                    <select id="equalizerType">
+                        <option value="none">None</option>
+                        <option value="zero-forcing">Zero-Forcing</option>
+                        <option value="mmse">MMSE</option>
+                    </select>
+                </div>
+                <button id="runSimulationBtn">Run Simulation</button>
+            </div>
+
+            <h3>Transmitted Signal</h3>
+            <div class="chart-container">
+                <canvas id="txSignalChart"></canvas>
+            </div>
+
+            <h3>Received Signal (After Channel & Equalization)</h3>
+            <div class="chart-container">
+                <canvas id="rxSignalChart"></canvas>
+            </div>
+
+            <h3>Constellation Diagram</h3>
+            <div class="chart-container">
+                <canvas id="constellationChart"></canvas>
+            </div>
+
+            <div class="metrics">
+                <div class="metric-item">
+                    Bit Error Rate (BER): <strong id="berValue">N/A</strong>
+                </div>
+                <div class="metric-item">
+                    Symbol Error Rate (SER): <strong id="serValue">N/A</strong>
+                </div>
+                <div class="metric-item">
+                    Simulated SNR: <strong id="simSnrValue">N/A</strong>
+                </div>
+            </div>
+            <p>The constellation diagram visually represents the received symbols in the complex plane. Ideally, they should cluster tightly around the reference points (small black circles). Noise, interference, and uncompensated channel effects cause them to spread out, leading to errors.</p>
+        </section>
+
+        <footer>
+            <p style="text-align: center; font-size: 0.9em; color: #64748b;">
+                Built as an interactive demonstration. Simplified models are used for educational purposes.
             </p>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        <!-- Introduction Section -->
-        <section id="introduction" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">Introduction to OFDM</h2>
-            <p class="text-gray-700 mb-4">
-                <strong>Orthogonal Frequency Division Multiplexing (OFDM)</strong> is a digital modulation technique that divides a high-rate data stream into multiple lower-rate streams that are transmitted simultaneously over multiple orthogonal subcarriers. This approach provides several advantages over single-carrier modulation schemes, particularly in challenging channel conditions.
-            </p>
-            <p class="text-gray-700 mb-4">
-                OFDM is widely used in many modern communication systems including:
-            </p>
-            <ul class="list-disc list-inside text-gray-700 mb-4 space-y-1">
-                <li>Wi-Fi (IEEE 802.11a/g/n/ac/ax)</li>
-                <li>4G/LTE and 5G cellular networks</li>
-                <li>Digital television (DVB-T, DVB-T2)</li>
-                <li>Digital radio (DAB, HD Radio)</li>
-                <li>DSL internet (ADSL, VDSL)</li>
-            </ul>
-            <div class="formula-box">
-                The key concept of OFDM is the orthogonality of subcarriers:
-                $$\frac{1}{T}\int_0^T e^{j2\pi(f_1-f_2)t}dt = \begin{cases} 
-                1 & \text{if } f_1 = f_2 \\
-                0 & \text{if } f_1 \neq f_2 
-                \end{cases}$$
-                Where $T$ is the symbol duration and $f_1$, $f_2$ are subcarrier frequencies.
-            </div>
-        </section>
-
-        <!-- Basic Principles Section -->
-        <section id="principles" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">Basic Principles</h2>
-            
-            <h3 class="text-xl font-semibold text-slate-800 mb-2">1. Frequency Division Multiplexing</h3>
-            <p class="text-gray-700 mb-4">
-                OFDM divides the available bandwidth into multiple narrowband subcarriers. Unlike traditional FDM, OFDM subcarriers are spaced as close as possible while maintaining orthogonality, which provides spectral efficiency.
-            </p>
-            
-            <div class="plot-container">
-                <canvas id="subcarrierPlot" class="plot-canvas" aria-label="OFDM subcarriers visualization"></canvas>
-                <div class="flex justify-center mt-4 gap-4">
-                    <button id="showTraditionalFdm" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">
-                        Show Traditional FDM
-                    </button>
-                    <button id="showOfdm" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
-                        Show OFDM
-                    </button>
-                </div>
-            </div>
-            
-            <h3 class="text-xl font-semibold text-slate-800 mt-8 mb-2">2. Orthogonality</h3>
-            <p class="text-gray-700 mb-4">
-                The orthogonality of subcarriers means that each subcarrier's peak coincides with zeros of all other subcarriers. This allows subcarriers to overlap without interfering with each other, maximizing spectral efficiency.
-            </p>
-            
-            <div class="plot-container">
-                <canvas id="orthogonalityPlot" class="plot-canvas" aria-label="OFDM orthogonality visualization"></canvas>
-                <div class="flex justify-center mt-4 gap-4">
-                    <button id="showSingleSubcarrier" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">
-                        Show Single Subcarrier
-                    </button>
-                    <button id="showMultipleSubcarriers" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
-                        Show Multiple Subcarriers
-                    </button>
-                </div>
-            </div>
-            
-            <h3 class="text-xl font-semibold text-slate-800 mt-8 mb-2">3. Guard Interval and Cyclic Prefix</h3>
-            <p class="text-gray-700 mb-4">
-                To combat inter-symbol interference (ISI) caused by multipath propagation, OFDM systems add a guard interval (typically a cyclic prefix) to each symbol. The cyclic prefix is a copy of the end of the symbol placed at the beginning.
-            </p>
-            
-            <div class="plot-container">
-                <canvas id="cyclicPrefixPlot" class="plot-canvas" aria-label="Cyclic prefix visualization"></canvas>
-                <div class="flex justify-center mt-4 gap-4">
-                    <button id="showWithoutCp" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">
-                        Without Cyclic Prefix
-                    </button>
-                    <button id="showWithCp" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
-                        With Cyclic Prefix
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- OFDM System Model Section -->
-        <section id="system-model" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">OFDM System Model</h2>
-            
-            <div class="grid md:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2">Transmitter</h3>
-                    <p class="text-gray-700 mb-4">
-                        The OFDM transmitter converts a serial data stream into parallel streams, modulates each subcarrier, and performs an Inverse Fast Fourier Transform (IFFT) to generate the time-domain signal.
-                    </p>
-                    <div class="bg-gray-100 p-4 rounded-lg mb-4">
-                        <p class="font-mono text-sm">
-                            Serial Data → Serial-to-Parallel → Subcarrier Modulation → IFFT → Add Cyclic Prefix → Parallel-to-Serial → Transmit
-                        </p>
-                    </div>
-                    
-                    <h4 class="font-semibold text-gray-800 mb-2">Key Equations:</h4>
-                    <div class="formula-box">
-                        The time-domain OFDM signal is:
-                        $$x(t) = \sum_{k=0}^{N-1} X_k e^{j2\pi k \Delta f t}, \quad 0 \leq t \leq T$$
-                        Where:
-                        <ul class="list-disc list-inside mt-2">
-                            <li>$X_k$ is the complex symbol on the $k^{th}$ subcarrier</li>
-                            <li>$\Delta f$ is the subcarrier spacing ($\Delta f = 1/T$)</li>
-                            <li>$N$ is the number of subcarriers</li>
-                            <li>$T$ is the symbol duration</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2">Receiver</h3>
-                    <p class="text-gray-700 mb-4">
-                        The OFDM receiver performs the reverse operations: removes the cyclic prefix, converts the serial signal to parallel, performs FFT to recover the subcarriers, then demodulates and combines the parallel streams.
-                    </p>
-                    <div class="bg-gray-100 p-4 rounded-lg mb-4">
-                        <p class="font-mono text-sm">
-                            Receive → Serial-to-Parallel → Remove Cyclic Prefix → FFT → Subcarrier Demodulation → Parallel-to-Serial → Data
-                        </p>
-                    </div>
-                    
-                    <h4 class="font-semibold text-gray-800 mb-2">Key Equations:</h4>
-                    <div class="formula-box">
-                        The received symbol on the $k^{th}$ subcarrier is:
-                        $$Y_k = H_k X_k + N_k$$
-                        Where:
-                        <ul class="list-disc list-inside mt-2">
-                            <li>$H_k$ is the channel frequency response</li>
-                            <li>$N_k$ is the additive noise</li>
-                        </ul>
-                        The estimated transmitted symbol is:
-                        $$\hat{X}_k = Y_k / H_k$$
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-8">
-                <h3 class="text-xl font-semibold text-slate-800 mb-2">Interactive OFDM System</h3>
-                <p class="text-gray-700 mb-4">
-                    Adjust the parameters below to see how they affect the OFDM signal:
-                </p>
-                
-                <div class="grid md:grid-cols-3 gap-4 mb-6">
-                    <div>
-                        <label for="numSubcarriers" class="block text-sm font-medium text-gray-700 mb-1">Number of Subcarriers</label>
-                        <input type="range" id="numSubcarriers" min="4" max="64" step="4" value="16" class="w-full">
-                        <span id="numSubcarriersValue" class="text-sm text-gray-600">16 subcarriers</span>
-                    </div>
-                    <div>
-                        <label for="cpRatio" class="block text-sm font-medium text-gray-700 mb-1">Cyclic Prefix Ratio</label>
-                        <input type="range" id="cpRatio" min="0" max="0.25" step="0.01" value="0.1" class="w-full">
-                        <span id="cpRatioValue" class="text-sm text-gray-600">10%</span>
-                    </div>
-                    <div>
-                        <label for="snr" class="block text-sm font-medium text-gray-700 mb-1">Signal-to-Noise Ratio</label>
-                        <input type="range" id="snr" min="0" max="30" step="1" value="20" class="w-full">
-                        <span id="snrValue" class="text-sm text-gray-600">20 dB</span>
-                    </div>
-                </div>
-                
-                <div class="plot-container">
-                    <canvas id="ofdmSystemPlot" class="plot-canvas" aria-label="OFDM system visualization"></canvas>
-                </div>
-                
-                <div class="flex justify-center mt-4 gap-4">
-                    <button id="transmitBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded">
-                        Transmit OFDM Symbol
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Advantages Section -->
-        <section id="advantages" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">Advantages of OFDM</h2>
-            
-            <div class="grid md:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Check mark">✅</span> Spectral Efficiency
-                    </h3>
-                    <p class="text-gray-700">
-                        The overlapping orthogonal subcarriers allow OFDM to achieve higher spectral efficiency compared to conventional FDM. The orthogonality eliminates the need for guard bands between subcarriers.
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Check mark">✅</span> Robustness to Multipath
-                    </h3>
-                    <p class="text-gray-700">
-                        The cyclic prefix makes OFDM robust against multipath propagation and inter-symbol interference (ISI). The longer symbol duration also makes it less susceptible to delay spread.
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Check mark">✅</span> Flexible Resource Allocation
-                    </h3>
-                    <p class="text-gray-700">
-                        Different subcarriers can be modulated independently, allowing adaptive modulation and coding based on channel conditions. Poor quality subcarriers can be avoided or use more robust modulation.
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Check mark">✅</span> Efficient Implementation
-                    </h3>
-                    <p class="text-gray-700">
-                        The use of FFT/IFFT enables efficient digital implementation. The computational complexity grows as N log N with the number of subcarriers, rather than N² for conventional multicarrier systems.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Challenges Section -->
-        <section id="challenges" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">Challenges and Solutions</h2>
-            
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" data-tab="pap">Peak-to-Average Power</button>
-                    <button class="tab-button" data-tab="foffset">Frequency Offset</button>
-                    <button class="tab-button" data-tab="timing">Timing Synchronization</button>
-                    <button class="tab-button" data-tab="channel">Channel Estimation</button>
-                </div>
-                
-                <div class="tab-content active" id="pap-tab">
-                    <h4 class="font-semibold text-lg mb-2">High Peak-to-Average Power Ratio (PAPR)</h4>
-                    <p class="text-gray-700 mb-2">
-                        OFDM signals can have high peak power compared to their average power, requiring power amplifiers with large dynamic range.
-                    </p>
-                    <p class="text-gray-700 mb-2">
-                        <strong>Solutions:</strong> Clipping and filtering, selective mapping, partial transmit sequences, tone reservation.
-                    </p>
-                    <div class="plot-container">
-                        <canvas id="paprPlot" class="plot-canvas" aria-label="PAPR visualization"></canvas>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="foffset-tab">
-                    <h4 class="font-semibold text-lg mb-2">Frequency Offset Sensitivity</h4>
-                    <p class="text-gray-700 mb-2">
-                        OFDM is sensitive to carrier frequency offset which destroys subcarrier orthogonality, causing inter-carrier interference (ICI).
-                    </p>
-                    <p class="text-gray-700 mb-2">
-                        <strong>Solutions:</strong> Frequency offset estimation algorithms, pilot subcarriers, more stable oscillators.
-                    </p>
-                    <div class="plot-container">
-                        <canvas id="foffsetPlot" class="plot-canvas" aria-label="Frequency offset visualization"></canvas>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="timing-tab">
-                    <h4 class="font-semibold text-lg mb-2">Timing Synchronization</h4>
-                    <p class="text-gray-700 mb-2">
-                        Accurate timing synchronization is crucial to maintain orthogonality and properly remove the cyclic prefix.
-                    </p>
-                    <p class="text-gray-700 mb-2">
-                        <strong>Solutions:</strong> Training sequences, correlation-based techniques, pilot symbols.
-                    </p>
-                    <div class="plot-container">
-                        <canvas id="timingPlot" class="plot-canvas" aria-label="Timing synchronization visualization"></canvas>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="channel-tab">
-                    <h4 class="font-semibold text-lg mb-2">Channel Estimation</h4>
-                    <p class="text-gray-700 mb-2">
-                        The receiver needs to estimate the channel frequency response for each subcarrier to properly equalize the signal.
-                    </p>
-                    <p class="text-gray-700 mb-2">
-                        <strong>Solutions:</strong> Pilot subcarriers, decision-directed estimation, blind estimation techniques.
-                    </p>
-                    <div class="plot-container">
-                        <canvas id="channelPlot" class="plot-canvas" aria-label="Channel estimation visualization"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Applications Section -->
-        <section id="applications" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">OFDM Applications</h2>
-            
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Wi-Fi">📶</span> Wi-Fi (IEEE 802.11)
-                    </h3>
-                    <p class="text-gray-700 text-sm">
-                        OFDM is used in Wi-Fi standards from 802.11a onward. Modern Wi-Fi 6 (802.11ax) uses OFDMA (Orthogonal Frequency Division Multiple Access) which extends OFDM with multi-user capabilities.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Cellular">📱</span> 4G/LTE and 5G
-                    </h3>
-                    <p class="text-gray-700 text-sm">
-                        LTE uses OFDM for downlink and SC-FDMA (a single-carrier variant) for uplink. 5G NR continues using OFDM with flexible numerology to support diverse services.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="TV">📺</span> Digital TV Broadcasting
-                    </h3>
-                    <p class="text-gray-700 text-sm">
-                        DVB-T/T2 standards use OFDM to provide robust terrestrial television reception in the presence of multipath interference and Doppler effects.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Radio">📻</span> Digital Radio
-                    </h3>
-                    <p class="text-gray-700 text-sm">
-                        DAB (Digital Audio Broadcasting) and HD Radio use OFDM to deliver high-quality digital audio services with good mobile reception characteristics.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="DSL">🔌</span> DSL Internet
-                    </h3>
-                    <p class="text-gray-700 text-sm">
-                        ADSL and VDSL use a form of OFDM called DMT (Discrete Multi-Tone) to maximize data rates over twisted-pair telephone lines.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                        <span role="img" aria-label="Future">🚀</span> Future Applications
-                    </h3>
-                    <p class="text-gray-700 text-sm">
-                        OFDM is being considered for optical communications, power-line communications, and even underwater acoustic communications.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Simulation Section -->
-        <section id="simulation" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">OFDM Simulation</h2>
-            
-            <div class="grid md:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2">Transmitted Signal</h3>
-                    <div class="plot-container">
-                        <canvas id="txSignalPlot" class="plot-canvas" aria-label="Transmitted signal visualization"></canvas>
-                    </div>
-                    <div class="mt-4">
-                        <label for="modulationType" class="block text-sm font-medium text-gray-700 mb-1">Modulation Type</label>
-                        <select id="modulationType" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                            <option value="qpsk">QPSK</option>
-                            <option value="16qam">16-QAM</option>
-                            <option value="64qam">64-QAM</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div>
-                    <h3 class="text-xl font-semibold text-slate-800 mb-2">Received Signal</h3>
-                    <div class="plot-container">
-                        <canvas id="rxSignalPlot" class="plot-canvas" aria-label="Received signal visualization"></canvas>
-                    </div>
-                    <div class="mt-4 grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="channelType" class="block text-sm font-medium text-gray-700 mb-1">Channel Model</label>
-                            <select id="channelType" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                                <option value="awgn">AWGN</option>
-                                <option value="rayleigh">Rayleigh Fading</option>
-                                <option value="multipath">Multipath</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="equalizerType" class="block text-sm font-medium text-gray-700 mb-1">Equalizer</label>
-                            <select id="equalizerType" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                                <option value="none">None</option>
-                                <option value="zero-forcing">Zero Forcing</option>
-                                <option value="mmse">MMSE</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-8">
-                <h3 class="text-xl font-semibold text-slate-800 mb-2">Constellation Diagram</h3>
-                <div class="plot-container">
-                    <canvas id="constellationPlot" class="plot-canvas" aria-label="Constellation diagram"></canvas>
-                </div>
-                
-                <div class="flex justify-center mt-4 gap-4">
-                    <button id="runSimulationBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded">
-                        Run Simulation
-                    </button>
-                </div>
-                
-                <div class="mt-4 grid md:grid-cols-3 gap-4">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 mb-1">Bit Error Rate</h4>
-                        <p id="berValue" class="text-2xl font-bold text-blue-600">0.00</p>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 mb-1">Symbol Error Rate</h4>
-                        <p id="serValue" class="text-2xl font-bold text-blue-600">0.00</p>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 mb-1">Signal-to-Noise Ratio</h4>
-                        <p id="simSnrValue" class="text-2xl font-bold text-blue-600">20 dB</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="mt-16 bg-gray-800 text-white py-6 text-center rounded-t-lg">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <p>&copy; 2025 OFDM Tutorial. All rights reserved. Educational content.</p>
-            <p class="mt-2 text-sm text-gray-400">Accessibility features include high contrast mode, keyboard navigation, and ARIA labels.</p>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
     <script>
-        // --- OFDM Visualization Functions ---
+        // --- Global Chart Variables (Initialize them to null here) ---
         let subcarrierChart, orthogonalityChart, cyclicPrefixChart, ofdmSystemChart;
         let paprChart, foffsetChart, timingChart, channelChart;
         let txSignalChart, rxSignalChart, constellationChart;
-        
-        // Initialize all charts
+
+        // Complex Number Class (As implied by your code)
+        class Complex {
+            constructor(real, imag) {
+                this.real = real;
+                this.imag = imag;
+            }
+
+            add(other) {
+                return new Complex(this.real + other.real, this.imag + other.imag);
+            }
+
+            mult(other) {
+                return new Complex(this.real * other.real - this.imag * other.imag,
+                                   this.real * other.imag + this.imag * other.real);
+            }
+
+            magnitude() {
+                return Math.sqrt(this.real * this.real + this.imag * this.imag);
+            }
+        }
+
+        // --- Missing or Assumed Helper Functions ---
+
+        // Placeholder for IFFT (needs a proper FFT library or implementation)
+        // This is a simplified, non-functional placeholder.
+        // A real IFFT would be a numerical algorithm (like Cooley-Tukey).
+        function ifft(freqDomainSymbols) {
+            const N = freqDomainSymbols.length;
+            const timeDomainSignal = [];
+
+            // This is NOT a real IFFT. It's a dummy for demonstration.
+            // A proper implementation would involve complex exponentials and summation.
+            for (let n = 0; n < N; n++) {
+                let realSum = 0;
+                let imagSum = 0;
+                for (let k = 0; k < N; k++) {
+                    const symbol = freqDomainSymbols[k] || new Complex(0,0);
+                    const angle = 2 * Math.PI * k * n / N;
+                    realSum += symbol.real * Math.cos(angle) + symbol.imag * Math.sin(angle);
+                    imagSum += symbol.imag * Math.cos(angle) - symbol.real * Math.sin(angle);
+                }
+                timeDomainSignal.push(new Complex(realSum / N, imagSum / N)); // Divide by N for IFFT
+            }
+            return timeDomainSignal;
+        }
+
+        // This is the CRUCIAL missing function from your snippet
+        function generateOfdmSignal(numSubcarriers, cpRatio) {
+            const numDataSubcarriers = numSubcarriers; // Simplified: assuming all are data subcarriers
+            const symbolLength = numSubcarriers; // Length of IFFT output
+            const cpLength = Math.round(symbolLength * cpRatio);
+            const totalSymbolLength = symbolLength + cpLength;
+
+            // 1. Generate random complex symbols (e.g., QPSK, 16QAM, etc. - simplified for this example)
+            const symbols = [];
+            for (let i = 0; i < numDataSubcarriers; i++) {
+                // Simplified: Just random complex numbers for demonstration
+                // In a real system, these would be modulated data symbols
+                symbols.push(new Complex(Math.random() * 2 - 1, Math.random() * 2 - 1));
+            }
+
+            // Pad with zeros for IFFT if numSubcarriers is not a power of 2
+            // Or assume numSubcarriers is always a power of 2 for IFFT
+            const paddedSymbols = [...symbols];
+            while (paddedSymbols.length < symbolLength) {
+                paddedSymbols.push(new Complex(0, 0));
+            }
+
+            // 2. Perform IFFT to get time-domain signal
+            const timeDomainData = ifft(paddedSymbols);
+
+            // 3. Add Cyclic Prefix
+            const cp = timeDomainData.slice(symbolLength - cpLength, symbolLength);
+            const timeSignal = [...cp, ...timeDomainData]; // CP + Data
+
+            return { symbols: symbols, timeSignal: timeSignal };
+        }
+
+        // --- Chart Initialization Function ---
         function initializeCharts() {
-            // Subcarrier comparison chart
-            const subcarrierCtx = document.getElementById('subcarrierPlot').getContext('2d');
-            subcarrierChart = new Chart(subcarrierCtx, createSubcarrierChartConfig());
-            
-            // Orthogonality chart
-            const orthogonalityCtx = document.getElementById('orthogonalityPlot').getContext('2d');
-            orthogonalityChart = new Chart(orthogonalityCtx, createOrthogonalityChartConfig());
-            
-            // Cyclic prefix chart
-            const cyclicPrefixCtx = document.getElementById('cyclicPrefixPlot').getContext('2d');
-            cyclicPrefixChart = new Chart(cyclicPrefixCtx, createCyclicPrefixChartConfig());
-            
-            // OFDM system chart
-            const ofdmSystemCtx = document.getElementById('ofdmSystemPlot').getContext('2d');
-            ofdmSystemChart = new Chart(ofdmSystemCtx, createOfdmSystemChartConfig());
-            
-            // PAPR chart
-            const paprCtx = document.getElementById('paprPlot').getContext('2d');
-            paprChart = new Chart(paprCtx, createPaprChartConfig());
-            
-            // Frequency offset chart
-            const foffsetCtx = document.getElementById('foffsetPlot').getContext('2d');
-            foffsetChart = new Chart(foffsetCtx, createFoffsetChartConfig());
-            
-            // Timing chart
-            const timingCtx = document.getElementById('timingPlot').getContext('2d');
-            timingChart = new Chart(timingCtx, createTimingChartConfig());
-            
-            // Channel estimation chart
-            const channelCtx = document.getElementById('channelPlot').getContext('2d');
-            channelChart = new Chart(channelCtx, createChannelChartConfig());
-            
-            // Transmitted signal chart
-            const txSignalCtx = document.getElementById('txSignalPlot').getContext('2d');
-            txSignalChart = new Chart(txSignalCtx, createSignalChartConfig('Transmitted OFDM Signal'));
-            
-            // Received signal chart
-            const rxSignalCtx = document.getElementById('rxSignalPlot').getContext('2d');
-            rxSignalChart = new Chart(rxSignalCtx, createSignalChartConfig('Received OFDM Signal'));
-            
-            // Constellation chart
-            const constellationCtx = document.getElementById('constellationPlot').getContext('2d');
-            constellationChart = new Chart(constellationCtx, createConstellationChartConfig());
-        }
-        
-        // Chart configuration functions
-        function createSubcarrierChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 100}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'Traditional FDM',
-                            data: Array(100).fill(0),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'OFDM',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Frequency', 'Amplitude')
-            };
-        }
-        
-        function createOrthogonalityChartConfig() {
-            return {
+            // Subcarrier Chart
+            subcarrierChart = new Chart(document.getElementById('subcarrierChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: Array.from({length: 100}, (_, i) => i),
                     datasets: [
                         {
                             label: 'Subcarrier 1',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
                         },
                         {
                             label: 'Subcarrier 2',
-                            data: Array(100).fill(0),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
                         },
                         {
                             label: 'Subcarrier 3',
-                            data: Array(100).fill(0),
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Time', 'Amplitude')
-            };
-        }
-        
-        function createCyclicPrefixChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 120}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'OFDM Symbol',
-                            data: Array(120).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Cyclic Prefix',
-                            data: Array(120).fill(0),
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Time', 'Amplitude')
-            };
-        }
-        
-        function createOfdmSystemChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 100}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'Transmitted Signal',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Received Signal',
-                            data: Array(100).fill(0),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Time', 'Amplitude')
-            };
-        }
-        
-        function createPaprChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 100}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'OFDM Signal',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Average Power',
-                            data: Array(100).fill(0),
-                            borderColor: '#64748b',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
-                            fill: false
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Time', 'Power (dB)')
-            };
-        }
-        
-        function createFoffsetChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 100}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'Subcarriers with Frequency Offset',
-                            data: Array(100).fill(0),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Original Subcarriers',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Frequency', 'Amplitude')
-            };
-        }
-        
-        function createTimingChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 100}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'OFDM Symbol with Timing Offset',
-                            data: Array(100).fill(0),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Original OFDM Symbol',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Time', 'Amplitude')
-            };
-        }
-        
-        function createChannelChartConfig() {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 64}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'Channel Frequency Response',
-                            data: Array(64).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Channel Estimate',
-                            data: Array(64).fill(0),
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: createCommonChartOptions('Subcarrier Index', 'Magnitude (dB)')
-            };
-        }
-        
-        function createSignalChartConfig(title) {
-            return {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 100}, (_, i) => i),
-                    datasets: [
-                        {
-                            label: 'Real Part',
-                            data: Array(100).fill(0),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Imaginary Part',
-                            data: Array(100).fill(0),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    ...createCommonChartOptions('Time', 'Amplitude'),
-                    plugins: {
-                        ...createCommonChartOptions('Time', 'Amplitude').plugins,
-                        title: {
-                            display: true,
-                            text: title,
-                            font: {
-                                size: 16
-                            }
-                        }
-                    }
-                }
-            };
-        }
-        
-        function createConstellationChartConfig() {
-            return {
-                type: 'scatter',
-                data: {
-                    datasets: [
-                        {
-                            label: 'Received Symbols',
-                            data: [],
-                            backgroundColor: '#3b82f6',
-                            borderColor: '#1d4ed8',
-                            borderWidth: 1,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        },
-                        {
-                            label: 'Reference Constellation',
-                            data: [],
-                            backgroundColor: '#ef4444',
-                            borderColor: '#b91c1c',
-                            borderWidth: 1,
-                            pointRadius: 3,
-                            pointHoverRadius: 5
+                            borderColor: 'rgb(54, 162, 235)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
                         }
                     ]
                 },
@@ -970,473 +537,859 @@
                     maintainAspectRatio: false,
                     scales: {
                         x: {
-                            title: {
-                                display: true,
-                                text: 'In-Phase'
-                            },
-                            min: -2,
-                            max: 2
+                            title: { display: true, text: 'Frequency' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
                         },
                         y: {
-                            title: {
-                                display: true,
-                                text: 'Quadrature'
-                            },
-                            min: -2,
-                            max: 2
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
                         }
                     },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: (${context.parsed.x.toFixed(2)}, ${context.parsed.y.toFixed(2)})`;
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-        }
-        
-        function createCommonChartOptions(xLabel, yLabel) {
-            return {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: xLabel
-                        },
-                        grid: {
-                            color: '#e2e8f0'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: yLabel
-                        },
-                        grid: {
-                            color: '#e2e8f0'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
-                            }
-                        }
-                    }
-                }
-            };
-        }
-        
-        // --- Generate OFDM Signals ---
-        function generateOfdmSignal(numSubcarriers, cpRatio) {
-            // Generate random QPSK symbols
-            const symbols = Array.from({length: numSubcarriers}, () => {
-                const val = Math.floor(Math.random() * 4);
-                switch(val) {
-                    case 0: return {real: 1/Math.sqrt(2), imag: 1/Math.sqrt(2)};
-                    case 1: return {real: -1/Math.sqrt(2), imag: 1/Math.sqrt(2)};
-                    case 2: return {real: -1/Math.sqrt(2), imag: -1/Math.sqrt(2)};
-                    case 3: return {real: 1/Math.sqrt(2), imag: -1/Math.sqrt(2)};
+                    plugins: { legend: { display: true } }
                 }
             });
-            
-            // Perform IFFT (simplified)
-            const ifftSize = 64; // Fixed IFFT size for visualization
-            const ifftInput = Array(ifftSize).fill({real: 0, imag: 0});
-            
-            // Center the active subcarriers
-            const startIdx = Math.floor((ifftSize - numSubcarriers) / 2);
-            for (let i = 0; i < numSubcarriers; i++) {
-                ifftInput[startIdx + i] = symbols[i];
-            }
-            
-            // Simple IFFT simulation (just for visualization)
-            const timeSignal = [];
-            for (let n = 0; n < ifftSize; n++) {
-                let real = 0;
-                let imag = 0;
-                
-                for (let k = 0; k < ifftSize; k++) {
-                    const angle = 2 * Math.PI * k * n / ifftSize;
-                    real += ifftInput[k].real * Math.cos(angle) + ifftInput[k].imag * Math.sin(angle);
-                    imag += -ifftInput[k].real * Math.sin(angle) + ifftInput[k].imag * Math.cos(angle);
+
+            // Orthogonality Chart
+            orthogonalityChart = new Chart(document.getElementById('orthogonalityChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Subcarrier F1',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Subcarrier F2',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Subcarrier F3',
+                            borderColor: 'rgb(54, 162, 235)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
                 }
-                
-                real /= ifftSize;
-                imag /= ifftSize;
-                
-                timeSignal.push({real, imag});
-            }
-            
-            // Add cyclic prefix
-            const cpLength = Math.floor(ifftSize * cpRatio);
-            const cp = timeSignal.slice(ifftSize - cpLength);
-            const ofdmSymbol = [...cp, ...timeSignal];
-            
-            return {
-                symbols,
-                timeSignal,
-                ofdmSymbol,
-                ifftInput
-            };
+            });
+
+            // Cyclic Prefix Chart
+            cyclicPrefixChart = new Chart(document.getElementById('cyclicPrefixChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'OFDM Symbol',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Cyclic Prefix',
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Sample' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // OFDM System Chart (Tx vs Rx)
+            ofdmSystemChart = new Chart(document.getElementById('ofdmSystemChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Transmitted Signal (Real)',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Received Signal (Real)',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Sample' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // PAPR Chart
+            paprChart = new Chart(document.getElementById('paprChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Instantaneous Power (dB)',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Average Power (dB)',
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderDash: [5, 5],
+                            tension: 0,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Sample' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Power (dB)' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Frequency Offset Chart
+            foffsetChart = new Chart(document.getElementById('foffsetChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Subcarriers with Offset',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Original Subcarriers',
+                            borderColor: 'rgb(75, 192, 192)',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Frequency' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Timing Offset Chart
+            timingChart = new Chart(document.getElementById('timingChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Symbol with Offset',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Original Symbol',
+                            borderColor: 'rgb(75, 192, 192)',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Sample' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Channel Chart
+            channelChart = new Chart(document.getElementById('channelChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 64}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Actual Channel (dB)',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Channel Estimate (dB)',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Subcarrier Index' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Magnitude (dB)' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Transmitted Signal Chart (Main Simulation)
+            txSignalChart = new Chart(document.getElementById('txSignalChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Real Part',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Imaginary Part',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Sample' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Received Signal Chart (Main Simulation)
+            rxSignalChart = new Chart(document.getElementById('rxSignalChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Real Part',
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        },
+                        {
+                            label: 'Imaginary Part',
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            data: []
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Sample' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Amplitude' },
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Constellation Chart (Main Simulation)
+            constellationChart = new Chart(document.getElementById('constellationChart').getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Received Symbols',
+                            data: [],
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Reference Points',
+                            data: [],
+                            backgroundColor: 'black',
+                            pointRadius: 7,
+                            pointStyle: 'crossRot', // 'circle', 'triangle', 'rect', 'cross', 'star', 'line', 'dash'
+                            borderColor: 'black'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: 'Real' },
+                            min: -1.5, // Adjust as needed for constellation scaling
+                            max: 1.5,
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: 'Imaginary' },
+                            min: -1.5, // Adjust as needed
+                            max: 1.5,
+                            grid: { color: 'rgba(200, 200, 200, 0.2)' }
+                        }
+                    },
+                    plugins: { legend: { display: true } }
+                }
+            });
         }
-        
-        // --- Update Charts with Data ---
-        function updateSubcarrierChart(showOfdm) {
+
+
+        // --- Your provided JavaScript functions go here ---
+
+        function updateSubcarrierChart(isOfdm) {
             const labels = Array.from({length: 100}, (_, i) => i);
-            
-            if (showOfdm) {
-                // OFDM subcarriers (sinc functions)
-                const ofdmData = labels.map(x => {
-                    const center1 = 30;
-                    const center2 = 70;
-                    return Math.abs(Math.sin(Math.PI * (x - center1)) / (Math.PI * (x - center1)) * 50 +
-                           Math.abs(Math.sin(Math.PI * (x - center2)) / (Math.PI * (x - center2)) * 50;
+            let dataset1Data = [];
+            let dataset2Data = [];
+            let dataset3Data = [];
+
+            if (isOfdm) {
+                // OFDM: Overlapping orthogonal sinc functions
+                const N = 100; // Number of points
+                const fc1 = 20; // Center frequency for subcarrier 1
+                const fc2 = 40; // Center frequency for subcarrier 2
+                const fc3 = 60; // Center frequency for subcarrier 3
+
+                dataset1Data = labels.map(f => {
+                    const x = (f - fc1);
+                    return x === 0 ? 1 : Math.sin(Math.PI * x / (N/20)) / (Math.PI * x / (N/20)); // Sinc function
                 });
-                
-                subcarrierChart.data.datasets[0].data = Array(100).fill(0);
-                subcarrierChart.data.datasets[1].data = ofdmData;
+                dataset2Data = labels.map(f => {
+                    const x = (f - fc2);
+                    return x === 0 ? 1 : Math.sin(Math.PI * x / (N/20)) / (Math.PI * x / (N/20));
+                });
+                dataset3Data = labels.map(f => {
+                    const x = (f - fc3);
+                    return x === 0 ? 1 : Math.sin(Math.PI * x / (N/20)) / (Math.PI * x / (N/20));
+                });
+
+                // Scale for better visualization
+                const maxVal = Math.max(...dataset1Data.map(Math.abs), ...dataset2Data.map(Math.abs), ...dataset3Data.map(Math.abs));
+                dataset1Data = dataset1Data.map(d => d / maxVal * 10);
+                dataset2Data = dataset2Data.map(d => d / maxVal * 10);
+                dataset3Data = dataset3Data.map(d => d / maxVal * 10);
+
             } else {
-                // Traditional FDM (rectangular pulses)
-                const fdmData = labels.map(x => {
-                    if ((x > 25 && x < 35) || (x > 65 && x < 75)) return 50;
-                    return 0;
-                });
-                
-                subcarrierChart.data.datasets[0].data = fdmData;
-                subcarrierChart.data.datasets[1].data = Array(100).fill(0);
+                // Traditional FDM: Separate frequency bands
+                const bandWidth = 15;
+                dataset1Data = labels.map(i => i >= 10 && i < 10 + bandWidth ? 10 : 0);
+                dataset2Data = labels.map(i => i >= 40 && i < 40 + bandWidth ? 10 : 0);
+                dataset3Data = labels.map(i => i >= 70 && i < 70 + bandWidth ? 10 : 0);
             }
-            
+
+            subcarrierChart.data.datasets[0].data = dataset1Data;
+            subcarrierChart.data.datasets[1].data = dataset2Data;
+            subcarrierChart.data.datasets[2].data = dataset3Data;
             subcarrierChart.update();
         }
-        
+
         function updateOrthogonalityChart(showMultiple) {
             const labels = Array.from({length: 100}, (_, i) => i);
-            
+            const freq1 = 2; // Frequency for subcarrier 1
+            const freq2 = 4; // Frequency for subcarrier 2
+            const freq3 = 6; // Frequency for subcarrier 3 (orthogonal)
+
+            const dataset1Data = labels.map(t => Math.sin(2 * Math.PI * freq1 * t / 100) * 10);
+
             if (showMultiple) {
-                // Three orthogonal subcarriers
-                const subcarrier1 = labels.map(x => 40 * Math.cos(2 * Math.PI * x / 20));
-                const subcarrier2 = labels.map(x => 40 * Math.cos(2 * Math.PI * x / 20 + Math.PI/2));
-                const subcarrier3 = labels.map(x => 40 * Math.cos(2 * Math.PI * x / 20 + Math.PI));
-                
-                orthogonalityChart.data.datasets[0].data = subcarrier1;
-                orthogonalityChart.data.datasets[1].data = subcarrier2;
-                orthogonalityChart.data.datasets[2].data = subcarrier3;
+                const dataset2Data = labels.map(t => Math.sin(2 * Math.PI * freq2 * t / 100) * 10);
+                const dataset3Data = labels.map(t => Math.sin(2 * Math.PI * freq3 * t / 100) * 10);
+                orthogonalityChart.data.datasets[1].data = dataset2Data;
+                orthogonalityChart.data.datasets[2].data = dataset3Data;
             } else {
-                // Single subcarrier
-                const subcarrier = labels.map(x => 50 * Math.cos(2 * Math.PI * x / 20));
-                
-                orthogonalityChart.data.datasets[0].data = subcarrier;
-                orthogonalityChart.data.datasets[1].data = Array(100).fill(0);
-                orthogonalityChart.data.datasets[2].data = Array(100).fill(0);
+                orthogonalityChart.data.datasets[1].data = []; // Clear other datasets
+                orthogonalityChart.data.datasets[2].data = [];
             }
-            
+
+            orthogonalityChart.data.datasets[0].data = dataset1Data;
             orthogonalityChart.update();
         }
-        
-        function updateCyclicPrefixChart(showWithCp) {
-            const labels = Array.from({length: 120}, (_, i) => i);
-            
-            if (showWithCp) {
-                // OFDM symbol with cyclic prefix
-                const cpLength = 20;
-                const symbolLength = 100;
-                
-                // Generate a sample OFDM symbol
-                const symbol = labels.map(x => {
-                    if (x < cpLength) return 0; // Will be filled with CP
-                    if (x >= cpLength + symbolLength) return 0;
-                    return 30 * Math.sin(2 * Math.PI * (x - cpLength) / 25) * 
-                           Math.sin(2 * Math.PI * (x - cpLength) / 10);
-                });
-                
-                // Add cyclic prefix
+
+        function updateCyclicPrefixChart(withCp) {
+            const labels = Array.from({length: 100}, (_, i) => i);
+            const symbolLength = 60; // Length of the core OFDM symbol
+            const cpLength = 10;     // Length of the cyclic prefix
+
+            // Generate a simple sinusoidal symbol
+            const coreSymbol = labels.slice(0, symbolLength).map(x => 20 * Math.sin(2 * Math.PI * x / 20));
+
+            let fullSymbol = [];
+            let cpVisualization = [];
+
+            if (withCp) {
+                // Take the last 'cpLength' samples and put them at the beginning
+                const cp = coreSymbol.slice(symbolLength - cpLength, symbolLength);
+                fullSymbol = [...cp, ...coreSymbol];
+
+                // Create a dataset for visualizing the CP part
+                cpVisualization = Array(100).fill(null);
                 for (let i = 0; i < cpLength; i++) {
-                    symbol[i] = symbol[symbolLength + i];
+                    cpVisualization[i] = fullSymbol[i];
                 }
-                
-                cyclicPrefixChart.data.datasets[0].data = symbol;
-                
-                // Highlight cyclic prefix
-                const cpData = labels.map((_, i) => (i < cpLength) ? symbol[i] : 0);
-                cyclicPrefixChart.data.datasets[1].data = cpData;
             } else {
-                // OFDM symbol without cyclic prefix
-                const symbol = labels.map(x => {
-                    if (x >= 100) return 0;
-                    return 30 * Math.sin(2 * Math.PI * x / 25) * 
-                           Math.sin(2 * Math.PI * x / 10);
-                });
-                
-                cyclicPrefixChart.data.datasets[0].data = symbol;
-                cyclicPrefixChart.data.datasets[1].data = Array(120).fill(0);
+                fullSymbol = coreSymbol;
             }
-            
+
+            // Pad with zeros if the symbol is shorter than 100 samples for the chart
+            while (fullSymbol.length < 100) {
+                fullSymbol.push(0);
+            }
+
+            cyclicPrefixChart.data.datasets[0].data = fullSymbol;
+            cyclicPrefixChart.data.datasets[1].data = cpVisualization; // CP part
             cyclicPrefixChart.update();
         }
-        
-        function updateOfdmSystemChart(numSubcarriers, cpRatio, snr) {
-            // Generate OFDM signal
-            const { ofdmSymbol } = generateOfdmSignal(numSubcarriers, cpRatio);
-            
-            // Create noisy received signal
-            const noiseLevel = Math.pow(10, -snr/20);
+
+        function updateOfdmSystemChart(numSubcarriersStr, cpRatioStr, snrStr) {
+            const numSubcarriers = parseInt(numSubcarriersStr);
+            const cpRatio = parseFloat(cpRatioStr);
+            const snr = parseFloat(snrStr); // SNR in dB
+
+            // Convert SNR from dB to linear scale for noise calculation
+            const snrLinear = Math.pow(10, snr / 10);
+            // Simplified noise level calculation. Adjust this for realistic SNR.
+            // A common way: noise power = signal power / snrLinear.
+            // For visualization, we just need a magnitude.
+            const noiseLevel = 1 / Math.sqrt(snrLinear) * 0.5; // Heuristic for visual effect
+
+            // Generate a dummy OFDM symbol for visualization (not a real one from IFFT)
+            const sampleLength = 100;
+            const ofdmSymbol = Array.from({length: sampleLength}, (_, i) => {
+                // Create a sample complex value
+                const sample = new Complex(
+                    Math.sin(2 * Math.PI * i / (sampleLength / (numSubcarriers / 4))), // Some fundamental freq
+                    Math.cos(2 * Math.PI * i / (sampleLength / (numSubcarriers / 4))) // Some fundamental freq
+                );
+                // Introduce some "complexity" from multiple subcarriers
+                sample.real += 0.5 * Math.sin(2 * Math.PI * i / (sampleLength / (numSubcarriers / 2)));
+                sample.imag += 0.5 * Math.cos(2 * Math.PI * i / (sampleLength / (numSubcarriers / 2)));
+                return sample;
+            });
+
+            // Simulate noise and channel effect
             const rxSignal = ofdmSymbol.map(sample => {
                 return {
                     real: sample.real + noiseLevel * (Math.random() - 0.5),
                     imag: sample.imag + noiseLevel * (Math.random() - 0.5)
                 };
             });
-            
+
             // Update chart with first 100 samples
             const txData = ofdmSymbol.slice(0, 100).map(s => s.real);
             const rxData = rxSignal.slice(0, 100).map(s => s.real);
-            
+
             ofdmSystemChart.data.datasets[0].data = txData;
             ofdmSystemChart.data.datasets[1].data = rxData;
             ofdmSystemChart.update();
         }
-        
+
         function updatePaprChart() {
             // Generate a signal with high PAPR
             const labels = Array.from({length: 100}, (_, i) => i);
             const signal = labels.map(x => {
-                const sum = Array.from({length: 8}, (_, k) => 
+                const sum = Array.from({length: 8}, (_, k) =>
                     Math.cos(2 * Math.PI * x * (k + 1) / 100)
                 ).reduce((a, b) => a + b, 0);
-                return 20 * Math.log10(Math.abs(sum) + 1);
+                // Add a small constant to avoid log10(0) for visualization
+                return 20 * Math.log10(Math.abs(sum) + 0.001);
             });
-            
+
             const avgPower = 10; // Average power in dB
-            
+
             paprChart.data.datasets[0].data = signal;
             paprChart.data.datasets[1].data = Array(100).fill(avgPower);
             paprChart.update();
         }
-        
+
         function updateFoffsetChart() {
             const labels = Array.from({length: 100}, (_, i) => i);
-            
+
             // Original subcarriers (3 orthogonal sinc functions)
             const original = labels.map(x => {
                 const center1 = 20;
                 const center2 = 50;
                 const center3 = 80;
-                return Math.abs(Math.sin(Math.PI * (x - center1)) / (Math.PI * (x - center1))) * 50 +
-                       Math.abs(Math.sin(Math.PI * (x - center2)) / (Math.PI * (x - center2))) * 50 +
-                       Math.abs(Math.sin(Math.PI * (x - center3)) / (Math.PI * (x - center3))) * 50;
+                // Sinc function approximation for frequency domain
+                const sinc = (val, center) => {
+                    const arg = Math.PI * (val - center);
+                    return arg === 0 ? 1 : Math.sin(arg) / arg;
+                };
+
+                return Math.abs(sinc(x, center1)) * 50 +
+                       Math.abs(sinc(x, center2)) * 50 +
+                       Math.abs(sinc(x, center3)) * 50;
             });
-            
+
             // Subcarriers with frequency offset
-            const offset = 2;
+            const offset = 2; // Introduce a frequency offset
             const withOffset = labels.map(x => {
                 const center1 = 20 + offset;
                 const center2 = 50 + offset;
                 const center3 = 80 + offset;
-                return Math.abs(Math.sin(Math.PI * (x - center1)) / (Math.PI * (x - center1)) * 50 +
-                       Math.abs(Math.sin(Math.PI * (x - center2)) / (Math.PI * (x - center2)) * 50 +
-                       Math.abs(Math.sin(Math.PI * (x - center3)) / (Math.PI * (x - center3)) * 50;
+                const sinc = (val, center) => {
+                    const arg = Math.PI * (val - center);
+                    return arg === 0 ? 1 : Math.sin(arg) / arg;
+                };
+
+                return Math.abs(sinc(x, center1)) * 50 +
+                       Math.abs(sinc(x, center2)) * 50 +
+                       Math.abs(sinc(x, center3)) * 50;
             });
-            
+
             foffsetChart.data.datasets[0].data = withOffset;
             foffsetChart.data.datasets[1].data = original;
             foffsetChart.update();
         }
-        
+
         function updateTimingChart() {
             const labels = Array.from({length: 100}, (_, i) => i);
-            
-            // Original OFDM symbol
+
+            // Original OFDM symbol (simplified as a modulated pulse)
             const original = labels.map(x => {
-                if (x < 20 || x >= 80) return 0;
-                return 30 * Math.sin(2 * Math.PI * (x - 20) / 30) * 
-                       Math.sin(2 * Math.PI * (x - 20) / 15);
+                if (x < 20 || x >= 80) return 0; // Define a symbol window
+                return 30 * Math.sin(2 * Math.PI * (x - 20) / 30) *
+                       Math.sin(2 * Math.PI * (x - 20) / 15); // Multiple frequencies for complex shape
             });
-            
+
             // With timing offset
-            const offset = 10;
+            const offset = 10; // Introduce a timing offset
             const withOffset = labels.map(x => {
-                const pos = x - offset;
+                const pos = x - offset; // Shift the original symbol
                 if (pos < 20 || pos >= 80) return 0;
-                return 30 * Math.sin(2 * Math.PI * (pos - 20) / 30) * 
+                return 30 * Math.sin(2 * Math.PI * (pos - 20) / 30) *
                        Math.sin(2 * Math.PI * (pos - 20) / 15);
             });
-            
+
             timingChart.data.datasets[0].data = withOffset;
             timingChart.data.datasets[1].data = original;
             timingChart.update();
         }
-        
+
         function updateChannelChart() {
             const labels = Array.from({length: 64}, (_, i) => i);
-            
+
             // Channel frequency response (random fading)
             const channel = labels.map(i => {
-                const fade = 0.5 + 0.5 * Math.random();
-                return 20 * Math.log10(fade);
+                const fade = 0.5 + 0.5 * Math.random(); // Random fade factor
+                // Small constant to prevent log10(0)
+                return 20 * Math.log10(fade + 0.001); // Convert to dB
             });
-            
+
             // Channel estimate (with some error)
             const estimate = channel.map(h => {
-                const error = 2 * (Math.random() - 0.5);
+                const error = 2 * (Math.random() - 0.5); // Random error in dB
                 return h + error;
             });
-            
+
             channelChart.data.datasets[0].data = channel;
             channelChart.data.datasets[1].data = estimate;
             channelChart.update();
         }
-        
+
         function runSimulation() {
             const modulationType = document.getElementById('modulationType').value;
             const channelType = document.getElementById('channelType').value;
             const equalizerType = document.getElementById('equalizerType').value;
-            
+
             // Generate transmitted signal
-            const { symbols, timeSignal } = generateOfdmSignal(16, 0.1);
-            
+            // Assuming 64 subcarriers for full simulation as a common value
+            const { symbols, timeSignal } = generateOfdmSignal(64, 0.1);
+
             // Update transmitted signal plot
             const txReal = timeSignal.map(s => s.real);
             const txImag = timeSignal.map(s => s.imag);
-            txSignalChart.data.datasets[0].data = txReal;
-            txSignalChart.data.datasets[1].data = txImag;
+            txSignalChart.data.datasets[0].data = txReal.slice(0,100); // Limit to first 100 for display
+            txSignalChart.data.datasets[1].data = txImag.slice(0,100);
             txSignalChart.update();
-            
+
             // Simulate channel effects
             let rxSymbols = symbols.map(symbol => {
-                // Apply channel effect based on channel type
-                let h = 1; // Channel coefficient
-                let noise = 0;
-                
+                let h = new Complex(1, 0); // Channel coefficient (complex for more realistic simulation)
+                let noise = new Complex(0, 0);
+
                 switch(channelType) {
                     case 'awgn':
-                        noise = 0.1 * (Math.random() - 0.5);
+                        noise = new Complex(0.1 * (Math.random() - 0.5), 0.1 * (Math.random() - 0.5));
                         break;
                     case 'rayleigh':
-                        h = Math.sqrt(-2 * Math.log(1 - Math.random()));
-                        noise = 0.1 * (Math.random() - 0.5);
+                        // Rayleigh fading affects magnitude. Angle for phase distortion.
+                        const magnitude = Math.sqrt(-2 * Math.log(1 - Math.random()));
+                        const phase = 2 * Math.PI * Math.random();
+                        h = new Complex(magnitude * Math.cos(phase), magnitude * Math.sin(phase));
+                        noise = new Complex(0.1 * (Math.random() - 0.5), 0.1 * (Math.random() - 0.5));
                         break;
                     case 'multipath':
-                        h = 0.8 + 0.4 * Math.random();
-                        noise = 0.2 * (Math.random() - 0.5);
+                        // Simplified multipath: fixed attenuation and some random phase/attenuation
+                        const mpMagnitude = 0.8 + 0.4 * Math.random();
+                        const mpPhase = 0.2 * Math.PI * (Math.random() - 0.5); // Small phase shift
+                        h = new Complex(mpMagnitude * Math.cos(mpPhase), mpMagnitude * Math.sin(mpPhase));
+                        noise = new Complex(0.2 * (Math.random() - 0.5), 0.2 * (Math.random() - 0.5));
                         break;
                 }
-                
-                return {
-                    real: h * symbol.real + noise,
-                    imag: h * symbol.imag + noise
-                };
+
+                // Apply channel: Y = H * X + N
+                const receivedWithoutNoise = h.mult(symbol);
+                return receivedWithoutNoise.add(noise);
             });
-            
+
             // Apply equalization
             if (equalizerType !== 'none') {
                 rxSymbols = rxSymbols.map(symbol => {
+                    let hEst = new Complex(0.8, 0.1); // Simplified channel estimate for equalization demo
+
                     switch(equalizerType) {
                         case 'zero-forcing':
-                            return {
-                                real: symbol.real / 0.8, // Simplified channel estimate
-                                imag: symbol.imag / 0.8
-                            };
+                            // ZF: Y_eq = Y / H_est (divide by complex conjugate)
+                            const hEstMagSq = hEst.real * hEst.real + hEst.imag * hEst.imag;
+                            if (hEstMagSq === 0) return new Complex(0,0); // Avoid division by zero
+                            return new Complex(
+                                (symbol.real * hEst.real + symbol.imag * hEst.imag) / hEstMagSq,
+                                (symbol.imag * hEst.real - symbol.real * hEst.imag) / hEstMagSq
+                            );
                         case 'mmse':
-                            // Simplified MMSE equalization
-                            return {
-                                real: symbol.real * 0.8 / (0.8*0.8 + 0.1),
-                                imag: symbol.imag * 0.8 / (0.8*0.8 + 0.1)
-                            };
+                            // MMSE: H_est* / (|H_est|^2 + N0/Es) * Y
+                            // Simplified N0/Es (noise-to-signal ratio) as a constant 0.1 for demo
+                            const snrInverse = 0.1;
+                            const denominator = hEst.real * hEst.real + hEst.imag * hEst.imag + snrInverse;
+                            if (denominator === 0) return new Complex(0,0);
+                            const hEstConj = new Complex(hEst.real, -hEst.imag);
+                            const equalizerGain = hEstConj.mult(new Complex(1/denominator, 0));
+                            return symbol.mult(equalizerGain);
                         default:
                             return symbol;
                     }
                 });
             }
-            
-            // Generate received time signal (simplified)
+
+            // Generate received time signal (simplified for plot, not from IFFT of rxSymbols)
             const rxTimeSignal = timeSignal.map(sample => {
                 return {
                     real: sample.real + 0.1 * (Math.random() - 0.5),
                     imag: sample.imag + 0.1 * (Math.random() - 0.5)
                 };
             });
-            
+
             // Update received signal plot
             const rxReal = rxTimeSignal.map(s => s.real);
             const rxImag = rxTimeSignal.map(s => s.imag);
-            rxSignalChart.data.datasets[0].data = rxReal;
-            rxSignalChart.data.datasets[1].data = rxImag;
+            rxSignalChart.data.datasets[0].data = rxReal.slice(0,100);
+            rxSignalChart.data.datasets[1].data = rxImag.slice(0,100);
             rxSignalChart.update();
-            
+
             // Update constellation diagram
             constellationChart.data.datasets[0].data = rxSymbols.map(s => ({
                 x: s.real,
                 y: s.imag
             }));
-            
+
             // Reference constellation points
             let refPoints = [];
+            // Scale reference points to a common magnitude for plotting.
+            // For QPSK/16QAM/64QAM, the average power can be normalized.
+            // A simple approach is to ensure the maximum magnitude of a constellation point is 1.
+            const qpskScale = 1 / Math.sqrt(2);
+            const qam16Scale = 1 / Math.sqrt(10); // For [-3,-1,1,3] values, average power is (9+1+1+9)/4 = 5, sqrt(5) for amplitude. For unit power, it's 1/sqrt(10)
+            const qam64Scale = 1 / Math.sqrt(42); // For [-7,-5,-3,-1,1,3,5,7] values, avg power is 42/4. sqrt(42) for amplitude
+
             switch(modulationType) {
                 case 'qpsk':
                     refPoints = [
-                        {x: 1/Math.sqrt(2), y: 1/Math.sqrt(2)},
-                        {x: -1/Math.sqrt(2), y: 1/Math.sqrt(2)},
-                        {x: -1/Math.sqrt(2), y: -1/Math.sqrt(2)},
-                        {x: 1/Math.sqrt(2), y: -1/Math.sqrt(2)}
+                        {x: 1 * qpskScale, y: 1 * qpskScale},
+                        {x: -1 * qpskScale, y: 1 * qpskScale},
+                        {x: -1 * qpskScale, y: -1 * qpskScale},
+                        {x: 1 * qpskScale, y: -1 * qpskScale}
                     ];
                     break;
                 case '16qam':
-                    refPoints = [];
                     for (let i = -3; i <= 3; i += 2) {
                         for (let j = -3; j <= 3; j += 2) {
-                            refPoints.push({x: i/Math.sqrt(10), y: j/Math.sqrt(10)});
+                            refPoints.push({x: i * qam16Scale, y: j * qam16Scale});
                         }
                     }
                     break;
                 case '64qam':
-                    refPoints = [];
                     for (let i = -7; i <= 7; i += 2) {
                         for (let j = -7; j <= 7; j += 2) {
-                            refPoints.push({x: i/Math.sqrt(42), y: j/Math.sqrt(42)});
+                            refPoints.push({x: i * qam64Scale, y: j * qam64Scale});
                         }
                     }
                     break;
             }
-            
+
             constellationChart.data.datasets[1].data = refPoints;
             constellationChart.update();
-            
+
             // Calculate error rates (simplified)
             let errorCount = 0;
-            rxSymbols.forEach((symbol, i) => {
-                if (i >= refPoints.length) return;
-                const dist = Math.sqrt(
-                    Math.pow(symbol.real - refPoints[i].x, 2) + 
-                    Math.pow(symbol.imag - refPoints[i].y, 2)
-                );
-                if (dist > 0.5) errorCount++;
+            const threshold = 0.3; // Distance threshold for error detection
+
+            rxSymbols.forEach(rxSym => {
+                let minDistance = Infinity;
+                let closestRef = null;
+
+                refPoints.forEach(ref => {
+                    const dist = Math.sqrt(
+                        Math.pow(rxSym.real - ref.x, 2) +
+                        Math.pow(rxSym.imag - ref.y, 2)
+                    );
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestRef = ref;
+                    }
+                });
+
+                if (minDistance > threshold) { // If received symbol is too far from any reference
+                    errorCount++;
+                }
             });
-            
-            const ser = errorCount / Math.min(rxSymbols.length, refPoints.length);
-            const ber = ser * (modulationType === 'qpsk' ? 1 : 
-                         modulationType === '16qam' ? 0.5 : 0.25);
-            
+
+            const ser = errorCount / rxSymbols.length;
+            let ber;
+            switch(modulationType) {
+                case 'qpsk':
+                    ber = ser / 2; // 2 bits per symbol
+                    break;
+                case '16qam':
+                    ber = ser / 4; // 4 bits per symbol
+                    break;
+                case '64qam':
+                    ber = ser / 6; // 6 bits per symbol
+                    break;
+                default:
+                    ber = ser;
+            }
+
             // Update metrics
             document.getElementById('berValue').textContent = ber.toFixed(4);
             document.getElementById('serValue').textContent = ser.toFixed(4);
-            document.getElementById('simSnrValue').textContent = '20 dB'; // Fixed for simplicity
+            document.getElementById('simSnrValue').textContent = `${snr} dB`; // Display selected SNR
         }
-        
+
         // --- Event Handlers ---
         function setupEventHandlers() {
             // Subcarrier visualization buttons
@@ -1446,7 +1399,7 @@
             document.getElementById('showOfdm').addEventListener('click', () => {
                 updateSubcarrierChart(true);
             });
-            
+
             // Orthogonality visualization buttons
             document.getElementById('showSingleSubcarrier').addEventListener('click', () => {
                 updateOrthogonalityChart(false);
@@ -1454,7 +1407,7 @@
             document.getElementById('showMultipleSubcarriers').addEventListener('click', () => {
                 updateOrthogonalityChart(true);
             });
-            
+
             // Cyclic prefix visualization buttons
             document.getElementById('showWithoutCp').addEventListener('click', () => {
                 updateCyclicPrefixChart(false);
@@ -1462,7 +1415,7 @@
             document.getElementById('showWithCp').addEventListener('click', () => {
                 updateCyclicPrefixChart(true);
             });
-            
+
             // OFDM system parameters
             const numSubcarriersSlider = document.getElementById('numSubcarriers');
             const numSubcarriersValue = document.getElementById('numSubcarriersValue');
@@ -1470,46 +1423,46 @@
             const cpRatioValue = document.getElementById('cpRatioValue');
             const snrSlider = document.getElementById('snr');
             const snrValue = document.getElementById('snrValue');
-            
+
             numSubcarriersSlider.addEventListener('input', () => {
                 const value = numSubcarriersSlider.value;
                 numSubcarriersValue.textContent = `${value} subcarriers`;
                 updateOfdmSystemChart(value, cpRatioSlider.value, snrSlider.value);
             });
-            
+
             cpRatioSlider.addEventListener('input', () => {
                 const value = cpRatioSlider.value;
                 cpRatioValue.textContent = `${Math.round(value * 100)}%`;
                 updateOfdmSystemChart(numSubcarriersSlider.value, value, snrSlider.value);
             });
-            
+
             snrSlider.addEventListener('input', () => {
                 const value = snrSlider.value;
                 snrValue.textContent = `${value} dB`;
                 updateOfdmSystemChart(numSubcarriersSlider.value, cpRatioSlider.value, value);
             });
-            
+
             // Transmit button
             document.getElementById('transmitBtn').addEventListener('click', () => {
                 updateOfdmSystemChart(numSubcarriersSlider.value, cpRatioSlider.value, snrSlider.value);
             });
-            
+
             // Tab buttons
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
-            
+
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const tabId = this.getAttribute('data-tab');
-                    
+
                     // Remove active class from all buttons and contents
                     tabButtons.forEach(btn => btn.classList.remove('active'));
                     tabContents.forEach(content => content.classList.remove('active'));
-                    
+
                     // Add active class to clicked button and corresponding content
                     this.classList.add('active');
                     document.getElementById(`${tabId}-tab`).classList.add('active');
-                    
+
                     // Update the chart for the active tab
                     switch(tabId) {
                         case 'pap':
@@ -1527,14 +1480,18 @@
                     }
                 });
             });
-            
+
             // Simulation button
             document.getElementById('runSimulationBtn').addEventListener('click', runSimulation);
-            
+
             // High contrast toggle
             document.getElementById('contrastToggle').addEventListener('click', function() {
                 document.body.classList.toggle('high-contrast');
-                
+
+                // The inline style changes are handled by the CSS for cleaner separation
+                // The provided JS had inline style changes, but it's better to manage via CSS classes.
+                // Leaving the previous JS style changes commented out for reference if needed
+                /*
                 if (document.body.classList.contains('high-contrast')) {
                     document.body.style.backgroundColor = '#000';
                     document.body.style.color = '#fff';
@@ -1550,24 +1507,25 @@
                         section.style.color = '#334155';
                     });
                 }
+                */
             });
         }
-        
+
         // --- Initialize Everything ---
         document.addEventListener('DOMContentLoaded', function() {
             initializeCharts();
             setupEventHandlers();
-            
+
             // Initialize with default visualizations
             updateSubcarrierChart(true);
             updateOrthogonalityChart(true);
             updateCyclicPrefixChart(true);
-            updateOfdmSystemChart(16, 0.1, 20);
+            updateOfdmSystemChart(16, 0.1, 20); // Initial values for system chart
             updatePaprChart();
             updateFoffsetChart();
             updateTimingChart();
             updateChannelChart();
-            
+
             // Run initial simulation
             runSimulation();
         });
