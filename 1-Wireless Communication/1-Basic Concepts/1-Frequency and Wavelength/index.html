@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Frequency and Wavelength</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Placeholder comments as required -->
+    <!-- Chosen Palette: Cool Blues & Grays (Slate, Indigo, Sky) -->
+    <!-- Application Structure Plan: A single-page, narrative tutorial. It begins with an introduction to waves, then dedicates sections to defining Wavelength and Frequency individually, followed by a crucial section explaining their relationship via the wave speed formula. An interactive calculator allows users to experiment with these relationships. Finally, real-world examples solidify understanding. This structure guides the user from foundational concepts to practical application and contextualization. -->
+    <!-- Visualization & Content Choices: [ Explanations: Goal is to inform. Method is structured text with clear headings and paragraphs, chosen for direct communication. Formulas: Goal is to inform. Method is LaTeX notation embedded directly in text, chosen for precise mathematical representation. Interactive Calculator: Goal is to engage and allow exploration of relationships. Method is HTML input fields with inline JavaScript for calculations, chosen for immediate feedback and direct manipulation of variables. Visual Cues: Unicode characters (e.g., wave emoji) and Tailwind styling (colors, spacing) are used for visual appeal and clarity, avoiding external images. Images: Placeholder images from placehold.co are used to illustrate concepts. Plot: A simple sine wave plot on a canvas is added to visually represent wavelength and frequency. ] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .section-title {
+            position: relative;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            color: #1e3a8a; /* indigo-800 */
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 60px;
+            height: 3px;
+            background-color: #3b82f6; /* blue-500 */
+            border-radius: 9999px;
+        }
+        .formula-box {
+            background-color: #e0f2fe; /* sky-100 */
+            border-left: 4px solid #38bdf8; /* sky-400 */
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Inter', monospace; /* Use monospace for formulas for clarity */
+            font-size: 1.125rem; /* lg text size */
+            color: #0c4a6e; /* sky-900 */
+            overflow-x: auto; /* Allow horizontal scrolling for long formulas on small screens */
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .input-group label {
+            width: 120px; /* Fixed width for labels */
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+        }
+        .input-group input {
+            flex-grow: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            border-radius: 0.375rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: #3b82f6; /* blue-500 */
+        }
+        .plot-container {
+            width: 100%;
+            max-width: 600px; /* Limit plot width */
+            margin: 2rem auto;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+        .plot-canvas {
+            display: block;
+            width: 100%;
+            height: 300px; /* Fixed height for the plot */
+        }
+    </style>
+</head>
+<body class="leading-relaxed">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16 px-4 sm:px-6 lg:px-8 shadow-xl rounded-b-lg">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+                🌊 Understanding Frequency and Wavelength 📡
+            </h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto opacity-90">
+                Explore the fundamental properties of waves that govern everything from light and sound to radio communication.
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Introduction to Waves Section -->
+        <section id="introduction" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Introduction to Waves</h2>
+            <p class="text-gray-700 mb-4">
+                In physics, a **wave** is a disturbance that transfers energy through a medium (or through space, in the case of electromagnetic waves) without necessarily transferring matter. Think of ripples expanding on a pond, the sound traveling from a speaker, or the invisible radio signals that bring you internet. All these phenomena are governed by wave principles.
+            </p>
+            <p class="text-gray-700">
+                Two of the most fundamental characteristics that describe any wave are its **frequency** and **wavelength**. Understanding these concepts is crucial for comprehending how different types of waves behave and how they are utilized in various technologies, from telecommunications to medical imaging.
+            </p>
+            <img src="https://placehold.co/600x300/e0f2fe/0c4a6e?text=Generic+Wave+Illustration" alt="Generic Wave Illustration" class="w-full h-auto rounded-lg shadow-md mt-8">
+            <p class="text-sm text-center text-gray-500 mt-2">
+                A visual representation of a wave, showing its oscillating nature.
+            </p>
+        </section>
+
+        <!-- Wavelength Section -->
+        <section id="wavelength" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Wavelength ($\lambda$)</h2>
+            <p class="text-gray-700 mb-4">
+                The **wavelength** ($\lambda$) of a wave is the spatial period of the wave – the distance over which the wave's shape repeats. Imagine a snapshot of a wave in time: the wavelength is the distance between two consecutive corresponding points on the wave, such as two successive crests, troughs, or zero crossings.
+            </p>
+            <p class="text-gray-700 mb-4">
+                It's essentially the "length" of one complete cycle of the wave.
+            </p>
+            <div class="formula-box">
+                **Unit:** Meters (m)
+            </div>
+            <p class="text-gray-700">
+                A longer wavelength means the wave is more "stretched out," while a shorter wavelength indicates a more "compressed" wave. For example, radio waves have very long wavelengths (meters to kilometers), while X-rays have extremely short wavelengths (picometers).
+            </p>
+            <img src="https://placehold.co/600x250/e0f2fe/0c4a6e?text=Wavelength+Diagram" alt="Wavelength Diagram" class="w-full h-auto rounded-lg shadow-md mt-8">
+            <p class="text-sm text-center text-gray-500 mt-2">
+                Illustration showing the wavelength as the distance between two consecutive crests of a wave.
+            </p>
+        </section>
+
+        <!-- Frequency Section -->
+        <section id="frequency" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Frequency (f)</h2>
+            <p class="text-gray-700 mb-4">
+                The **frequency** ($f$) of a wave is the number of complete cycles (or oscillations) that pass a given point in one second. It tells us how often a wave repeats itself.
+            </p>
+            <p class="text-gray-700 mb-4">
+                A high frequency means many wave cycles pass by per second, while a low frequency means fewer cycles pass by.
+            </p>
+            <div class="formula-box">
+                **Unit:** Hertz (Hz), which is equivalent to cycles per second ($s^{-1}$)
+            </div>
+            <p class="text-gray-700">
+                For instance, a sound wave with a high frequency corresponds to a high-pitched sound, and a low-frequency sound wave corresponds to a low-pitched sound. In radio, different frequencies are used to carry different channels of information.
+            </p>
+            <img src="https://placehold.co/600x250/e0f2fe/0c4a6e?text=Frequency+Diagram" alt="Frequency Diagram" class="w-full h-auto rounded-lg shadow-md mt-8">
+            <p class="text-sm text-center text-gray-500 mt-2">
+                Illustration showing frequency as the number of wave cycles passing a point per unit time.
+            </p>
+        </section>
+
+        <!-- Wave Speed and Relationship Section -->
+        <section id="wave-speed" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Wave Speed and Their Relationship</h2>
+            <p class="text-gray-700 mb-4">
+                The **speed** ($v$) at which a wave travels through a medium is directly related to its frequency and wavelength. This relationship is one of the most fundamental equations in wave physics:
+            </p>
+            <div class="formula-box">
+                $$v = f \cdot \lambda$$
+                Where: <br>
+                $v$ = Wave speed (meters per second, m/s) <br>
+                $f$ = Frequency (Hertz, Hz) <br>
+                $\lambda$ = Wavelength (meters, m)
+            </div>
+            <p class="text-gray-700 mb-4">
+                This formula highlights an inverse relationship between frequency and wavelength for a constant wave speed. If the wave speed remains constant (as it often does in a specific medium), then a higher frequency implies a shorter wavelength, and a lower frequency implies a longer wavelength.
+            </p>
+            <p class="text-gray-700">
+                A notable example is the speed of light in a vacuum, denoted by $c$, which is approximately $3 \times 10^8$ meters per second. All electromagnetic waves (radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, gamma rays) travel at this speed in a vacuum. This means for light, $c = f \cdot \lambda$.
+            </p>
+
+            <div class="plot-container">
+                <h3 class="text-xl font-semibold text-slate-800 mb-4 text-center">Visualizing Wave Properties</h3>
+                <canvas id="wavePlot" class="plot-canvas"></canvas>
+                <div class="flex justify-center items-center mt-4 space-x-4">
+                    <label for="plotFrequency" class="font-medium text-slate-700">Frequency:</label>
+                    <input type="range" id="plotFrequency" min="0.5" max="5" step="0.1" value="1" class="w-32">
+                    <span id="plotFrequencyValue" class="font-semibold text-blue-600">1 Hz</span>
+                </div>
+                <p class="text-sm text-center text-gray-500 mt-2">
+                    Adjust the slider to see how changing frequency affects the wavelength (assuming constant wave speed).
+                </p>
+            </div>
+        </section>
+
+        <!-- Interactive Calculator Section -->
+        <section id="calculator" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Interactive Wave Calculator</h2>
+            <p class="text-gray-700 mb-4">
+                Use this calculator to explore the relationship between wave speed, frequency, and wavelength. Enter any two values, and the calculator will compute the third.
+            </p>
+            <div class="max-w-md mx-auto p-6 bg-gray-50 rounded-lg shadow-inner">
+                <div class="input-group">
+                    <label for="speed">Wave Speed ($v$):</label>
+                    <input type="number" id="speed" placeholder="m/s">
+                    <span class="ml-2 text-gray-600">m/s</span>
+                </div>
+                <div class="input-group">
+                    <label for="frequency">Frequency ($f$):</label>
+                    <input type="number" id="frequency" placeholder="Hz">
+                    <span class="ml-2 text-gray-600">Hz</span>
+                </div>
+                <div class="input-group">
+                    <label for="wavelength">Wavelength ($\lambda$):</label>
+                    <input type="number" id="wavelength" placeholder="m">
+                    <span class="ml-2 text-gray-600">m</span>
+                </div>
+                <div class="flex justify-center mt-6 space-x-4">
+                    <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-colors">
+                        Calculate
+                    </button>
+                    <button id="clearBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full shadow-lg transition-colors">
+                        Clear
+                    </button>
+                </div>
+                <div id="result" class="mt-8 p-4 bg-blue-50 text-blue-800 rounded-lg text-center font-semibold hidden">
+                    <!-- Calculation result will be displayed here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-world Examples Section -->
+        <section id="examples" class="mb-16 bg-white p-8 rounded-lg shadow-md">
+            <h2 class="section-title text-3xl">Real-World Examples</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-800 mb-2 flex items-center">
+                        💡 Light Waves
+                    </h4>
+                    <p class="text-gray-700 mb-4">
+                        Visible light is a form of electromagnetic wave. Different colors of light correspond to different frequencies and wavelengths. Red light has a longer wavelength and lower frequency, while violet light has a shorter wavelength and higher frequency. All colors of visible light travel at the speed of light ($c$) in a vacuum.
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
+                        <li>Red Light: $\lambda \approx 700 \text{ nm}$, $f \approx 4.3 \times 10^{14} \text{ Hz}$</li>
+                        <li>Violet Light: $\lambda \approx 400 \text{ nm}$, $f \approx 7.5 \times 10^{14} \text{ Hz}$</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold text-gray-800 mb-2 flex items-center">
+                        🔊 Sound Waves
+                    </h4>
+                    <p class="text-gray-700 mb-4">
+                        Sound waves are mechanical waves that travel through a medium (like air or water). The pitch of a sound is determined by its frequency – higher frequency means higher pitch. The loudness is related to the wave's amplitude, not its frequency or wavelength. The speed of sound varies depending on the medium (e.g., faster in water than in air).
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
+                        <li>Low Pitch (Bass): Lower frequency, longer wavelength.</li>
+                        <li>High Pitch (Treble): Higher frequency, shorter wavelength.</li>
+                        <li>Speed of sound in air (at $20^\circ \text{C}$): $\approx 343 \text{ m/s}$</li>
+                    </ul>
+                </div>
+                <div class="md:col-span-2">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-2 flex items-center">
+                        📡 Radio Waves
+                    </h4>
+                    <p class="text-gray-700 mb-4">
+                        Radio waves are also electromagnetic waves used for communication. Different radio stations broadcast at different frequencies, which means their signals have different wavelengths. Radio waves travel at the speed of light. Your radio receiver is tuned to a specific frequency to pick up that station's signal.
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 text-sm space-y-1">
+                        <li>FM Radio: Frequencies around $88 \text{ MHz}$ to $108 \text{ MHz}$ (wavelengths of a few meters).</li>
+                        <li>AM Radio: Frequencies around $535 \text{ kHz}$ to $1705 \text{ kHz}$ (wavelengths of hundreds of meters).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 bg-gray-800 text-white py-6 text-center rounded-t-lg">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <p>&copy; 2025 Rahul Gulia. All rights reserved. This tutorial is for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Calculator Logic ---
+        const speedInput = document.getElementById('speed');
+        const frequencyInput = document.getElementById('frequency');
+        const wavelengthInput = document.getElementById('wavelength');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultDiv = document.getElementById('result');
+
+        const SPEED_OF_LIGHT = 3e8; // Approximate speed of light in m/s
+
+        function calculateWaveProperties() {
+            const v = parseFloat(speedInput.value);
+            const f = parseFloat(frequencyInput.value);
+            const l = parseFloat(wavelengthInput.value);
+
+            let calculatedValue;
+            let unit;
+            let propertyName;
+
+            // Check how many inputs are provided
+            const inputsProvided = [v, f, l].filter(val => !isNaN(val)).length;
+
+            if (inputsProvided !== 2) {
+                resultDiv.textContent = 'Please enter exactly two values to calculate the third.';
+                resultDiv.classList.remove('hidden');
+                resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
+                resultDiv.classList.add('bg-red-100', 'text-red-800');
+                return;
+            }
+
+            resultDiv.classList.remove('bg-red-100', 'text-red-800');
+            resultDiv.classList.add('bg-blue-50', 'text-blue-800');
+
+            if (isNaN(v) && !isNaN(f) && !isNaN(l)) {
+                // Calculate Speed (v = f * lambda)
+                calculatedValue = f * l;
+                propertyName = 'Wave Speed ($v$)';
+                unit = 'm/s';
+            } else if (isNaN(f) && !isNaN(v) && !isNaN(l)) {
+                // Calculate Frequency (f = v / lambda)
+                if (l === 0) {
+                    resultDiv.textContent = 'Wavelength cannot be zero for frequency calculation.';
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
+                    resultDiv.classList.add('bg-red-100', 'text-red-800');
+                    return;
+                }
+                calculatedValue = v / l;
+                propertyName = 'Frequency ($f$)';
+                unit = 'Hz';
+            } else if (isNaN(l) && !isNaN(v) && !isNaN(f)) {
+                // Calculate Wavelength (lambda = v / f)
+                if (f === 0) {
+                    resultDiv.textContent = 'Frequency cannot be zero for wavelength calculation.';
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
+                    resultDiv.classList.add('bg-red-100', 'text-red-800');
+                    return;
+                }
+                calculatedValue = v / f;
+                propertyName = 'Wavelength ($\lambda$)';
+                unit = 'm';
+            } else {
+                resultDiv.textContent = 'Please provide valid numeric inputs for two fields.';
+                resultDiv.classList.remove('hidden');
+                resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
+                resultDiv.classList.add('bg-red-100', 'text-red-800');
+                return;
+            }
+
+            resultDiv.textContent = `${propertyName}: ${calculatedValue.toPrecision(4)} ${unit}`;
+            resultDiv.classList.remove('hidden');
+        }
+
+        function clearInputs() {
+            speedInput.value = '';
+            frequencyInput.value = '';
+            wavelengthInput.value = '';
+            resultDiv.classList.add('hidden');
+            resultDiv.classList.remove('bg-red-100', 'text-red-800'); // Reset color
+        }
+
+        calculateBtn.addEventListener('click', calculateWaveProperties);
+        clearBtn.addEventListener('click', clearInputs);
+
+        // Optional: Allow pressing Enter in input fields to trigger calculation
+        speedInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculateWaveProperties(); });
+        frequencyInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculateWaveProperties(); });
+        wavelengthInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') calculateWaveProperties(); });
+
+        // --- Wave Plotting Logic ---
+        const waveCanvas = document.getElementById('wavePlot');
+        const waveCtx = waveCanvas.getContext('2d');
+        const plotFrequencySlider = document.getElementById('plotFrequency');
+        const plotFrequencyValue = document.getElementById('plotFrequencyValue');
+
+        const WAVE_SPEED_FOR_PLOT = 100; // Arbitrary constant speed for visualization
+        const AMPLITUDE = 50;
+        const X_OFFSET = 50; // Offset from left edge for drawing
+        const Y_OFFSET = waveCanvas.height / 2; // Center Y-axis
+
+        function drawWave() {
+            waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height); // Clear canvas
+
+            const frequency = parseFloat(plotFrequencySlider.value);
+            const wavelength = WAVE_SPEED_FOR_PLOT / frequency; // Calculate wavelength based on constant speed
+
+            plotFrequencyValue.textContent = `${frequency} Hz`;
+
+            waveCtx.beginPath();
+            waveCtx.strokeStyle = '#3b82f6'; // Blue color for the wave
+            waveCtx.lineWidth = 2;
+
+            // Draw the sine wave
+            for (let x = 0; x < waveCanvas.width; x++) {
+                const angle = (x - X_OFFSET) / wavelength * (2 * Math.PI); // Calculate angle based on wavelength
+                const y = Y_OFFSET - AMPLITUDE * Math.sin(angle); // Sine wave formula
+                if (x === 0) {
+                    waveCtx.moveTo(x, y);
+                } else {
+                    waveCtx.lineTo(x, y);
+                }
+            }
+            waveCtx.stroke();
+
+            // Draw X-axis
+            waveCtx.beginPath();
+            waveCtx.strokeStyle = '#64748b'; // Slate-500 for axis
+            waveCtx.lineWidth = 1;
+            waveCtx.moveTo(0, Y_OFFSET);
+            waveCtx.lineTo(waveCanvas.width, Y_OFFSET);
+            waveCtx.stroke();
+
+            // Draw labels for wavelength and frequency
+            waveCtx.fillStyle = '#1e3a8a'; // Indigo-800 for text
+            waveCtx.font = '14px Inter';
+            waveCtx.textAlign = 'center';
+
+            // Wavelength label
+            if (wavelength > 0 && wavelength * 2 < waveCanvas.width - X_OFFSET) { // Ensure at least one full wavelength fits
+                const startX = X_OFFSET;
+                const endX = X_OFFSET + wavelength;
+                waveCtx.fillText(`λ = ${wavelength.toFixed(1)} m`, startX + (endX - startX) / 2, Y_OFFSET + AMPLITUDE + 20);
+                
+                // Draw arrows for wavelength
+                waveCtx.beginPath();
+                waveCtx.moveTo(startX, Y_OFFSET + AMPLITUDE + 5);
+                waveCtx.lineTo(startX, Y_OFFSET + AMPLITUDE + 15);
+                waveCtx.moveTo(endX, Y_OFFSET + AMPLITUDE + 5);
+                waveCtx.lineTo(endX, Y_OFFSET + AMPLITUDE + 15);
+                waveCtx.moveTo(startX, Y_OFFSET + AMPLITUDE + 10);
+                waveCtx.lineTo(endX, Y_OFFSET + AMPLITUDE + 10);
+                waveCtx.strokeStyle = '#1e3a8a';
+                waveCtx.stroke();
+            }
+
+            // Frequency is represented by how many cycles fit in the visible range
+            waveCtx.textAlign = 'left';
+            waveCtx.fillText(`Frequency: ${frequency} Hz`, 10, 20);
+            waveCtx.fillText(`Wavelength: ${(WAVE_SPEED_FOR_PLOT / frequency).toFixed(2)} m`, 10, 40);
+            waveCtx.fillText(`Speed: ${WAVE_SPEED_FOR_PLOT} m/s (constant)`, 10, 60);
+        }
+
+        plotFrequencySlider.addEventListener('input', drawWave);
+
+        // Initial draw when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            drawWave(); // Draw the initial wave plot
+        });
+    </script>
+</body>
+</html>
