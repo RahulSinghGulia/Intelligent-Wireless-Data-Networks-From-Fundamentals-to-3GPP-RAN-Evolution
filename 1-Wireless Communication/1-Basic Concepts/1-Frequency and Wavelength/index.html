@@ -14,9 +14,6 @@
             src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
     
-    <!-- Chart.js for enhanced wave plotting -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -47,10 +44,10 @@
             border-radius: 0.5rem;
             margin-top: 1.5rem;
             margin-bottom: 1.5rem;
-            font-family: 'Inter', monospace;
+            font-family: 'Inter', monospace; /* Use monospace for formulas for clarity */
             font-size: 1.125rem; /* lg text size */
             color: #0c4a6e; /* sky-900 */
-            overflow-x: auto;
+            overflow-x: auto; /* Allow horizontal scrolling for long formulas on small screens */
         }
         .input-group {
             display: flex;
@@ -58,7 +55,7 @@
             margin-bottom: 1rem;
         }
         .input-group label {
-            width: 120px;
+            width: 120px; /* Fixed width for labels */
             font-weight: 500;
             color: #475569; /* slate-600 */
         }
@@ -344,7 +341,7 @@
                 <div class="flex flex-col sm:flex-row gap-4 items-center mb-4">
                     <label for="soundFrequency" class="font-medium text-slate-700 min-w-[120px]">Frequency:</label>
                     <input type="range" id="soundFrequency" min="100" max="2000" step="10" value="440" class="flex-grow">
-                    <span id="soundFrequencyValue" class="font-semibold text-blue-600 min-w-[80px] text-right">440 Hz</span>
+                    <span id="soundFrequencyValue" class="font-semibold text-blue-600 ml-2 min-w-[80px] text-right">440 Hz</span>
                 </div>
                 
                 <div class="flex gap-4">
@@ -409,63 +406,6 @@
             </div>
         </section>
 
-        <!-- Interactive Calculator Section -->
-        <section id="calculator" class="mb-16 bg-white p-8 rounded-lg shadow-md">
-            <h2 class="section-title text-3xl">Interactive Wave Calculator</h2>
-            <p class="text-gray-700 mb-4">
-                <strong>Enter exactly two values</strong> to calculate the third. You can also convert between units.
-            </p>
-            <div class="max-w-md mx-auto p-6 bg-gray-50 rounded-lg shadow-inner">
-                <div class="input-group">
-                    <label for="speed">Wave Speed ($v$):</label>
-                    <input type="number" id="speed" placeholder="m/s" aria-label="Wave speed input">
-                    <div class="unit-converter">
-                        <select id="speedUnit" aria-label="Wave speed unit selector">
-                            <option value="m/s">m/s</option>
-                            <option value="km/s">km/s</option>
-                            <option value="mph">mph</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="frequency">Frequency ($f$):</label>
-                    <input type="number" id="frequency" placeholder="Hz" aria-label="Frequency input">
-                    <div class="unit-converter">
-                        <select id="frequencyUnit" aria-label="Frequency unit selector">
-                            <option value="Hz">Hz</option>
-                            <option value="kHz">kHz</option>
-                            <option value="MHz">MHz</option>
-                            <option value="GHz">GHz</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="wavelength">Wavelength ($\lambda$):</label>
-                    <input type="number" id="wavelength" placeholder="m" aria-label="Wavelength input">
-                    <div class="unit-converter">
-                        <select id="wavelengthUnit" aria-label="Wavelength unit selector">
-                            <option value="m">m</option>
-                            <option value="cm">cm</option>
-                            <option value="mm">mm</option>
-                            <option value="nm">nm</option>
-                            <option value="km">km</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex flex-col sm:flex-row justify-center mt-6 gap-4">
-                    <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-colors">
-                        Calculate
-                    </button>
-                    <button id="clearBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full shadow-lg transition-colors">
-                        Clear
-                    </button>
-                </div>
-                <div id="result" class="mt-8 p-4 bg-blue-50 text-blue-800 rounded-lg text-center font-semibold hidden" aria-live="polite">
-                    <!-- Calculation result will be displayed here -->
-                </div>
-            </div>
-        </section>
-
         <!-- Electromagnetic Spectrum Section -->
         <section id="em-spectrum" class="mb-16 bg-white p-8 rounded-lg shadow-md">
             <h2 class="section-title text-3xl">Electromagnetic Spectrum</h2>
@@ -522,7 +462,7 @@
                 <div class="tab-content" id="ultraviolet-tab">
                     <h4 class="font-semibold text-lg mb-2">Ultraviolet</h4>
                     <p class="text-gray-700 mb-2">Frequency range: 800 THz - 30 PHz</p>
-                    <p class="text-gray-700 mb-2">Wavelength range: 400 nm - 10 nm</p>
+                    <p class="text-700 mb-2">Wavelength range: 400 nm - 10 nm</p>
                     <p class="text-gray-700">Used for: Sterilization, black lights, vitamin D production</p>
                 </div>
                 
@@ -627,240 +567,16 @@
     </footer>
 
     <script>
-        // --- Calculator Logic ---
-        const speedInput = document.getElementById('speed');
-        const frequencyInput = document.getElementById('frequency');
-        const wavelengthInput = document.getElementById('wavelength');
-        const speedUnit = document.getElementById('speedUnit');
-        const frequencyUnit = document.getElementById('frequencyUnit');
-        const wavelengthUnit = document.getElementById('wavelengthUnit');
-        const calculateBtn = document.getElementById('calculateBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const resultDiv = document.getElementById('result');
-
-        // Unit conversion factors
-        const speedConversion = {
-            'm/s': 1,
-            'km/s': 1000,
-            'mph': 0.44704
-        };
-        
-        const frequencyConversion = {
-            'Hz': 1,
-            'kHz': 1000,
-            'MHz': 1000000,
-            'GHz': 1000000000
-        };
-        
-        const wavelengthConversion = {
-            'm': 1,
-            'cm': 0.01,
-            'mm': 0.001,
-            'nm': 1e-9,
-            'km': 1000
-        };
-
-        // Function to convert units to base units (SI)
-        function convertToBase(value, unit, conversionTable) {
-            return value * conversionTable[unit];
-        }
-
-        // Function to convert from base units to desired units
-        function convertFromBase(value, unit, conversionTable) {
-            return value / conversionTable[unit];
-        }
-
-        // Function to calculate wave properties with unit conversion
-        function calculateWaveProperties() {
-            // Get values and units
-            const speedVal = parseFloat(speedInput.value) || NaN;
-            const frequencyVal = parseFloat(frequencyInput.value) || NaN;
-            const wavelengthVal = parseFloat(wavelengthInput.value) || NaN;
-            
-            const speedUnitVal = speedUnit.value;
-            const frequencyUnitVal = frequencyUnit.value;
-            const wavelengthUnitVal = wavelengthUnit.value;
-
-            // Convert all inputs to base units for calculation
-            const v = isNaN(speedVal) ? NaN : convertToBase(speedVal, speedUnitVal, speedConversion);
-            const f = isNaN(frequencyVal) ? NaN : convertToBase(frequencyVal, frequencyUnitVal, frequencyConversion);
-            const l = isNaN(wavelengthVal) ? NaN : convertToBase(wavelengthVal, wavelengthUnitVal, wavelengthConversion);
-
-            let calculatedValue;
-            let unit;
-            let propertyName;
-            let resultUnit;
-
-            // Count how many valid numerical inputs are provided
-            const inputsProvided = [v, f, l].filter(val => !isNaN(val)).length;
-
-            if (inputsProvided !== 2) {
-                resultDiv.textContent = 'Please enter exactly two numeric values to calculate the third.';
-                resultDiv.classList.remove('hidden');
-                resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
-                resultDiv.classList.add('bg-red-100', 'text-red-800');
-                return;
-            }
-
-            // Reset styling for result div
-            resultDiv.classList.remove('bg-red-100', 'text-red-800');
-            resultDiv.classList.add('bg-blue-50', 'text-blue-800');
-
-            if (isNaN(v) && !isNaN(f) && !isNaN(l)) {
-                // Calculate Speed (v = f * lambda)
-                calculatedValue = f * l;
-                propertyName = 'Wave Speed ($v$)';
-                unit = 'm/s';
-                resultUnit = speedUnitVal;
-                calculatedValue = convertFromBase(calculatedValue, resultUnit, speedConversion);
-            } else if (isNaN(f) && !isNaN(v) && !isNaN(l)) {
-                // Calculate Frequency (f = v / lambda)
-                if (l === 0) {
-                    resultDiv.textContent = 'Wavelength cannot be zero for frequency calculation.';
-                    resultDiv.classList.remove('hidden');
-                    resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
-                    resultDiv.classList.add('bg-red-100', 'text-red-800');
-                    return;
-                }
-                calculatedValue = v / l;
-                propertyName = 'Frequency ($f$)';
-                unit = 'Hz';
-                resultUnit = frequencyUnitVal;
-                calculatedValue = convertFromBase(calculatedValue, resultUnit, frequencyConversion);
-            } else if (isNaN(l) && !isNaN(v) && !isNaN(f)) {
-                // Calculate Wavelength (lambda = v / f)
-                if (f === 0) {
-                    resultDiv.textContent = 'Frequency cannot be zero for wavelength calculation.';
-                    resultDiv.classList.remove('hidden');
-                    resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
-                    resultDiv.classList.add('bg-red-100', 'text-red-800');
-                    return;
-                }
-                calculatedValue = v / f;
-                propertyName = 'Wavelength ($\lambda$)';
-                unit = 'm';
-                resultUnit = wavelengthUnitVal;
-                calculatedValue = convertFromBase(calculatedValue, resultUnit, wavelengthConversion);
-            } else {
-                resultDiv.textContent = 'An unexpected error occurred. Please clear and try again.';
-                resultDiv.classList.remove('hidden');
-                resultDiv.classList.remove('bg-blue-50', 'text-blue-800');
-                resultDiv.classList.add('bg-red-100', 'text-red-800');
-                return;
-            }
-
-            // Format the result nicely
-            let formattedValue;
-            if (Math.abs(calculatedValue) >= 1000 || Math.abs(calculatedValue) < 0.01) {
-                formattedValue = calculatedValue.toExponential(4);
-            } else {
-                formattedValue = calculatedValue.toFixed(4);
-            }
-
-            resultDiv.innerHTML = `${propertyName} = ${formattedValue} ${resultUnit}`;
-            resultDiv.classList.remove('hidden');
-            
-            // Update MathJax rendering
-            if (typeof MathJax !== 'undefined') {
-                MathJax.typeset();
-            }
-        }
-
-        function clearInputs() {
-            speedInput.value = '';
-            frequencyInput.value = '';
-            wavelengthInput.value = '';
-            resultDiv.classList.add('hidden');
-            resultDiv.classList.remove('bg-red-100', 'text-red-800');
-        }
-
-        calculateBtn.addEventListener('click', calculateWaveProperties);
-        clearBtn.addEventListener('click', clearInputs);
-
-        // Allow pressing Enter in input fields to trigger calculation
-        [speedInput, frequencyInput, wavelengthInput].forEach(input => {
-            input.addEventListener('keypress', (e) => { 
-                if (e.key === 'Enter') calculateWaveProperties(); 
-            });
-        });
-
         // --- Wave Plotting with Chart.js ---
-        const waveCtx = document.getElementById('wavePlot').getContext('2d');
-        const plotFrequencySlider = document.getElementById('plotFrequency');
-        const plotFrequencyValue = document.getElementById('plotFrequencyValue');
-        const plotSpeedSlider = document.getElementById('plotSpeed');
-        const plotSpeedValue = document.getElementById('plotSpeedValue');
-        
-        // Create initial wave data
-        const waveData = {
-            labels: Array.from({length: 100}, (_, i) => i),
-            datasets: [{
-                label: 'Waveform',
-                data: Array(100).fill(0),
-                borderColor: '#3b82f6',
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                tension: 0.1
-            }]
-        };
-        
-        // Chart configuration
-        const waveConfig = {
-            type: 'line',
-            data: waveData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Distance (m)',
-                            color: '#64748b'
-                        },
-                        grid: {
-                            color: '#e2e8f0'
-                        }
-                    },
-                    y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Amplitude',
-                            color: '#64748b'
-                        },
-                        min: -100,
-                        max: 100,
-                        grid: {
-                            color: '#e2e8f0'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Amplitude: ${context.parsed.y.toFixed(2)}`;
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    duration: 300
-                }
-            }
-        };
-        
-        // Create the chart
-        const waveChart = new Chart(waveCtx, waveConfig);
-        
+        let waveChart; // Declare waveChart globally
+        let waveCanvas, waveCtx, plotFrequencySlider, plotFrequencyValue, plotSpeedSlider, plotSpeedValue;
+
+        const AMPLITUDE_PLOT = 80; // Amplitude for the plot
+
         // Function to update the wave plot
         function updateWavePlot() {
+            if (!waveChart) return; // Ensure chart is initialized
+
             const frequency = parseFloat(plotFrequencySlider.value);
             const speed = parseFloat(plotSpeedSlider.value);
             const wavelength = speed / frequency;
@@ -868,9 +584,9 @@
             plotFrequencyValue.textContent = `${frequency} Hz`;
             plotSpeedValue.textContent = `${speed} m/s`;
             
-            // Update the chart data
-            const newData = waveData.labels.map(x => {
-                return 80 * Math.sin(2 * Math.PI * frequency * x / speed);
+            // Generate data for the sine wave
+            const newData = waveChart.data.labels.map(xValue => {
+                return AMPLITUDE_PLOT * Math.sin(2 * Math.PI * frequency * xValue / speed);
             });
             
             waveChart.data.datasets[0].data = newData;
@@ -878,29 +594,19 @@
             waveChart.update();
         }
         
-        // Event listeners for sliders
-        plotFrequencySlider.addEventListener('input', updateWavePlot);
-        plotSpeedSlider.addEventListener('input', updateWavePlot);
-        
-        // Initial plot update
-        updateWavePlot();
-
         // --- Sound Wave Visualization ---
-        const soundFrequencySlider = document.getElementById('soundFrequency');
-        const soundFrequencyValue = document.getElementById('soundFrequencyValue');
-        const playSoundBtn = document.getElementById('playSoundBtn');
-        const stopSoundBtn = document.getElementById('stopSoundBtn');
-        const soundVisualization = document.getElementById('soundVisualization');
-        
         let audioContext;
         let oscillator;
         let isPlaying = false;
-        
+        let soundVisualizationInterval; // Declare soundVisualizationInterval
+        let soundFrequencySliderElement, soundFrequencyValueElement, playSoundBtnElement, stopSoundBtnElement, soundVisualizationContainerElement; // Declare elements
+
         // Create sound bars for visualization
         function createSoundBars() {
-            soundVisualization.innerHTML = '';
+            if (!soundVisualizationContainerElement) return; // Ensure element is defined
+            soundVisualizationContainerElement.innerHTML = '';
             const barCount = 50;
-            const containerWidth = soundVisualization.offsetWidth;
+            const containerWidth = soundVisualizationContainerElement.offsetWidth;
             const barWidth = Math.max(2, containerWidth / barCount - 2);
             
             for (let i = 0; i < barCount; i++) {
@@ -909,7 +615,7 @@
                 bar.style.left = `${i * (barWidth + 2)}px`;
                 bar.style.width = `${barWidth}px`;
                 bar.style.height = '0px';
-                soundVisualization.appendChild(bar);
+                soundVisualizationContainerElement.appendChild(bar);
             }
         }
         
@@ -918,10 +624,12 @@
             if (!isPlaying) return;
             
             const bars = document.querySelectorAll('.sound-bar');
+            const baseHeight = soundVisualizationContainerElement.offsetHeight; // Get current height
             bars.forEach(bar => {
-                const randomHeight = Math.random() * 80 + 10;
+                const randomHeight = Math.random() * 80 + 10; // Random height between 10 and 90
                 bar.style.height = `${randomHeight}px`;
                 bar.style.backgroundColor = `hsl(${Math.random() * 60 + 200}, 80%, 60%)`;
+                bar.style.transform = `translateY(${baseHeight - randomHeight}px)`; // Align to bottom
             });
             
             requestAnimationFrame(updateSoundBars);
@@ -932,31 +640,31 @@
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                soundFrequencySlider.addEventListener('input', function() {
+                soundFrequencySliderElement.addEventListener('input', function() {
                     const freq = parseInt(this.value);
-                    soundFrequencyValue.textContent = `${freq} Hz`;
+                    soundFrequencyValueElement.textContent = `${freq} Hz`;
                     
                     if (oscillator) {
                         oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
                     }
                 });
                 
-                playSoundBtn.addEventListener('click', function() {
+                playSoundBtnElement.addEventListener('click', function() {
                     if (isPlaying) return;
                     
                     isPlaying = true;
                     oscillator = audioContext.createOscillator();
                     oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(parseInt(soundFrequencySlider.value), audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(parseInt(soundFrequencySliderElement.value), audioContext.currentTime);
                     oscillator.connect(audioContext.destination);
                     oscillator.start();
                     
                     updateSoundBars();
-                    playSoundBtn.disabled = true;
-                    stopSoundBtn.disabled = false;
+                    playSoundBtnElement.disabled = true;
+                    stopSoundBtnElement.disabled = false;
                 });
                 
-                stopSoundBtn.addEventListener('click', function() {
+                stopSoundBtnElement.addEventListener('click', function() {
                     if (!isPlaying) return;
                     
                     isPlaying = false;
@@ -965,6 +673,10 @@
                         oscillator.disconnect();
                         oscillator = null;
                     }
+                    if (soundVisualizationInterval) {
+                        clearInterval(soundVisualizationInterval);
+                        soundVisualizationInterval = null;
+                    }
                     
                     // Reset visualization
                     const bars = document.querySelectorAll('.sound-bar');
@@ -972,54 +684,37 @@
                         bar.style.height = '0px';
                     });
                     
-                    playSoundBtn.disabled = false;
-                    stopSoundBtn.disabled = true;
+                    playSoundBtnElement.disabled = false;
+                    stopSoundBtnElement.disabled = true;
                 });
                 
                 // Create initial bars
                 createSoundBars();
                 
-                // Handle window resize
+                // Handle window resize for sound bars
                 window.addEventListener('resize', createSoundBars);
                 
             } catch (e) {
                 console.error('Audio API not supported:', e);
-                playSoundBtn.disabled = true;
-                stopSoundBtn.disabled = true;
-                soundFrequencySlider.disabled = true;
-                document.getElementById('soundVisualization').innerHTML = 
-                    '<p class="text-center text-red-500 p-4">Audio not supported in your browser</p>';
+                if (playSoundBtnElement) playSoundBtnElement.disabled = true;
+                if (stopSoundBtnElement) stopSoundBtnElement.disabled = true;
+                if (soundFrequencySliderElement) soundFrequencySliderElement.disabled = true;
+                if (soundVisualizationContainerElement) {
+                    soundVisualizationContainerElement.innerHTML = 
+                        '<p class="text-center text-red-500 p-4">Audio not supported in your browser</p>';
+                }
             }
         }
         
-        // Initialize audio on user interaction (required by some browsers)
-        document.addEventListener('click', function initAudioOnInteraction() {
-            initAudio();
-            document.removeEventListener('click', initAudioOnInteraction);
-        }, { once: true });
-        
         // Update frequency display initially
-        soundFrequencyValue.textContent = `${soundFrequencySlider.value} Hz`;
+        // This needs to be called after soundFrequencySliderElement is defined
+        // soundFrequencyValueElement.textContent = `${soundFrequencySliderElement.value} Hz`;
 
-        // --- EM Spectrum Tabs ---
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove active class from all buttons and contents
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-                
-                // Add active class to clicked button and corresponding content
-                button.classList.add('active');
-                const tabId = button.getAttribute('data-tab');
-                document.getElementById(`${tabId}-tab`).classList.add('active');
-            });
-        });
 
-        // --- High Contrast Mode ---
+        // --- High Contrast Toggle Logic ---
         const contrastToggle = document.getElementById('contrastToggle');
+        let highContrastMode = false; // Initialize state
+
         const highContrastStyles = `
             .high-contrast {
                 --tw-bg-opacity: 1;
@@ -1031,16 +726,21 @@
                 color: rgb(255 255 255) !important;
                 border-color: rgb(255 255 255) !important;
             }
-            .high-contrast .text-gray-700 {
+            .high-contrast .text-gray-700,
+            .high-contrast .text-gray-500,
+            .high-contrast .text-slate-700,
+            .high-contrast .text-slate-800,
+            .high-contrast .text-gray-800 {
                 color: rgb(255 255 255) !important;
             }
             .high-contrast .formula-box {
                 background-color: rgb(0 0 0) !important;
-                border-color: rgb(255 255 0) !important;
-                color: rgb(255 255 0) !important;
+                border-color: rgb(255 255 0) !important; /* Yellow border for contrast */
+                color: rgb(255 255 0) !important; /* Yellow text for contrast */
             }
             .high-contrast .svg-diagram {
-                filter: invert(1) hue-rotate(180deg);
+                filter: invert(1) hue-rotate(180deg); /* Invert colors for better contrast */
+                border-color: rgb(255 255 255) !important;
             }
             .high-contrast .plot-container {
                 background-color: rgb(0 0 0) !important;
@@ -1051,9 +751,61 @@
                 color: rgb(255 255 255) !important;
                 border-color: rgb(255 255 255) !important;
             }
+            .high-contrast .input-group select {
+                background-color: rgb(0 0 0) !important;
+                color: rgb(255 255 255) !important;
+                border-color: rgb(255 255 255) !important;
+            }
+            .high-contrast .bg-gray-50 {
+                background-color: rgb(0 0 0) !important;
+                border-color: rgb(255 255 255) !important;
+            }
+            .high-contrast .bg-blue-50 {
+                background-color: rgb(0 0 0) !important;
+                color: rgb(255 255 0) !important; /* Yellow for results */
+            }
+            .high-contrast .bg-red-100 {
+                background-color: rgb(0 0 0) !important;
+                color: rgb(255 0 0) !important; /* Red for errors */
+            }
+            /* Adjust specific colors for high contrast */
+            .high-contrast .section-title {
+                color: rgb(255 255 0) !important; /* Yellow for titles */
+            }
+            .high-contrast .section-title::after {
+                background-color: rgb(255 255 0) !important; /* Yellow underline */
+            }
+            .high-contrast .font-semibold.text-blue-600 {
+                color: rgb(0 255 255) !important; /* Cyan for values */
+            }
+            .high-contrast .bg-blue-600 {
+                background-color: rgb(0 255 255) !important; /* Cyan for buttons */
+                color: rgb(0 0 0) !important;
+            }
+            .high-contrast .bg-gray-300 {
+                background-color: rgb(128 128 128) !important; /* Grey for buttons */
+                color: rgb(255 255 255) !important;
+            }
+            .high-contrast .bg-green-600 {
+                background-color: rgb(0 255 0) !important; /* Green for play button */
+                color: rgb(0 0 0) !important;
+            }
+            .high-contrast .bg-red-600 {
+                background-color: rgb(255 0 0) !important; /* Red for stop button */
+                color: rgb(0 0 0) !important;
+            }
+            .high-contrast .tab-button {
+                color: rgb(255 255 255) !important;
+            }
+            .high-contrast .tab-button.active {
+                border-bottom-color: rgb(255 255 0) !important;
+                color: rgb(255 255 0) !important;
+            }
+            .high-contrast .header, .high-contrast .footer {
+                background-color: rgb(0 0 0) !important;
+                border-color: rgb(255 255 255) !important;
+            }
         `;
-        
-        let highContrastMode = false;
         
         contrastToggle.addEventListener('click', () => {
             highContrastMode = !highContrastMode;
@@ -1073,7 +825,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
-                        <path d="M12 6a6 6 0 0 1 0 12"></path>
+                        <path d="M12 6a6 6 0  0 1 0 12"></path>
                     </svg>
                 `;
                 contrastToggle.setAttribute('aria-label', 'Disable high contrast mode');
@@ -1098,8 +850,133 @@
             }
         });
 
-        // --- Initialize MathJax ---
+        // --- Initialize on DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize plot elements
+            waveCanvas = document.getElementById('wavePlot');
+            waveCtx = waveCanvas.getContext('2d');
+            plotFrequencySlider = document.getElementById('plotFrequency');
+            plotFrequencyValue = document.getElementById('plotFrequencyValue');
+            plotSpeedSlider = document.getElementById('plotSpeed'); // New speed slider
+            plotSpeedValue = document.getElementById('plotSpeedValue'); // New speed value display
+
+            // Add plot event listeners
+            plotFrequencySlider.addEventListener('input', updateWavePlot);
+            plotSpeedSlider.addEventListener('input', updateWavePlot); // Listen to speed slider
+            window.addEventListener('resize', updateWavePlot); // Use updateWavePlot for resize
+
+            // Create initial wave data for Chart.js
+            const numPoints = 400; // Increased number of points for smoother curve and more cycles
+            const xMax = 400; // Max value for x-axis to show more cycles
+            const waveData = {
+                labels: Array.from({length: numPoints}, (_, i) => i * (xMax / numPoints)), // X-axis points, scaled
+                datasets: [{
+                    label: 'Waveform',
+                    data: Array(numPoints).fill(0), // Initialize with zeros
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0.1
+                }]
+            };
+            
+            // Chart configuration
+            const waveConfig = {
+                type: 'line',
+                data: waveData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Distance (m)',
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            },
+                            min: 0, // Start x-axis from 0
+                            max: xMax // Set max based on numPoints and desired range
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Amplitude',
+                                color: '#64748b'
+                            },
+                            min: -AMPLITUDE_PLOT,
+                            max: AMPLITUDE_PLOT,
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Amplitude: ${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 300
+                    }
+                }
+            };
+            
+            // Create the chart instance
+            waveChart = new Chart(waveCtx, waveConfig);
+
+            // Initial plot update
+            updateWavePlot();
+
+            // Initialize sound elements and listeners
+            soundFrequencySliderElement = document.getElementById('soundFrequency');
+            soundFrequencyValueElement = document.getElementById('soundFrequencyValue');
+            playSoundBtnElement = document.getElementById('playSoundBtn');
+            stopSoundBtnElement = document.getElementById('stopSoundBtn');
+            soundVisualizationContainerElement = document.getElementById('soundVisualization');
+
+            soundFrequencySliderElement.addEventListener('input', () => {
+                soundFrequencyValueElement.textContent = `${soundFrequencySliderElement.value} Hz`;
+                if (oscillator) { // If sound is playing, update frequency immediately
+                    oscillator.frequency.setValueAtTime(parseFloat(soundFrequencySliderElement.value), audioContext.currentTime);
+                }
+            });
+            playSoundBtnElement.addEventListener('click', initAudio); // Call initAudio on first click
+            stopSoundBtnElement.addEventListener('click', stopSound);
+
+            // Set initial state for sound buttons
+            stopSoundBtnElement.disabled = true;
+
+            // --- EM Spectrum Tabs ---
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+
+            // --- Initialize MathJax ---
             if (typeof MathJax !== 'undefined') {
                 MathJax.typesetPromise().catch(err => console.log('MathJax typeset error:', err));
             }
