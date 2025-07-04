@@ -14,6 +14,9 @@
             src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
     
+    <!-- Chart.js for enhanced wave plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -584,10 +587,15 @@
             plotFrequencyValue.textContent = `${frequency} Hz`;
             plotSpeedValue.textContent = `${speed} m/s`;
             
-            // Generate data for the sine wave
-            const newData = waveChart.data.labels.map(xValue => {
-                return AMPLITUDE_PLOT * Math.sin(2 * Math.PI * frequency * xValue / speed);
-            });
+            // Generate data for the sine wave as {x, y} objects
+            const numPoints = 400; // Increased number of points for smoother curve and more cycles
+            const xMax = 400; // Max value for x-axis to show more cycles
+            const newData = [];
+            for (let i = 0; i <= numPoints; i++) {
+                const xValue = i * (xMax / numPoints);
+                const yValue = AMPLITUDE_PLOT * Math.sin(2 * Math.PI * frequency * xValue / speed);
+                newData.push({x: xValue, y: yValue});
+            }
             
             waveChart.data.datasets[0].data = newData;
             waveChart.options.scales.x.title.text = `Distance (m) | λ = ${wavelength.toFixed(2)} m`;
@@ -598,12 +606,20 @@
         let audioContext;
         let oscillator;
         let isPlaying = false;
-        let soundVisualizationInterval; // Declare soundVisualizationInterval
-        let soundFrequencySliderElement, soundFrequencyValueElement, playSoundBtnElement, stopSoundBtnElement, soundVisualizationContainerElement; // Declare elements
+        let animationFrameId; // To store the requestAnimationFrame ID
+
+        let soundFrequencySliderElement, soundFrequencyValueElement, playSoundBtnElement, stopSoundBtnElement, soundVisualizationContainerElement;
+
+        // Function to initialize audio context (call once)
+        function initializeAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
 
         // Create sound bars for visualization
         function createSoundBars() {
-            if (!soundVisualizationContainerElement) return; // Ensure element is defined
+            if (!soundVisualizationContainerElement) return;
             soundVisualizationContainerElement.innerHTML = '';
             const barCount = 50;
             const containerWidth = soundVisualizationContainerElement.offsetWidth;
@@ -621,95 +637,62 @@
         
         // Update sound bars animation
         function updateSoundBars() {
-            if (!isPlaying) return;
+            if (!isPlaying) {
+                cancelAnimationFrame(animationFrameId);
+                return;
+            }
             
             const bars = document.querySelectorAll('.sound-bar');
-            const baseHeight = soundVisualizationContainerElement.offsetHeight; // Get current height
+            const baseHeight = soundVisualizationContainerElement.offsetHeight;
             bars.forEach(bar => {
-                const randomHeight = Math.random() * 80 + 10; // Random height between 10 and 90
+                const randomHeight = Math.random() * 80 + 10;
                 bar.style.height = `${randomHeight}px`;
                 bar.style.backgroundColor = `hsl(${Math.random() * 60 + 200}, 80%, 60%)`;
-                bar.style.transform = `translateY(${baseHeight - randomHeight}px)`; // Align to bottom
+                bar.style.transform = `translateY(${baseHeight - randomHeight}px)`;
             });
             
-            requestAnimationFrame(updateSoundBars);
+            animationFrameId = requestAnimationFrame(updateSoundBars);
         }
         
-        // Initialize sound system
-        function initAudio() {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                soundFrequencySliderElement.addEventListener('input', function() {
-                    const freq = parseInt(this.value);
-                    soundFrequencyValueElement.textContent = `${freq} Hz`;
-                    
-                    if (oscillator) {
-                        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-                    }
-                });
-                
-                playSoundBtnElement.addEventListener('click', function() {
-                    if (isPlaying) return;
-                    
-                    isPlaying = true;
-                    oscillator = audioContext.createOscillator();
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(parseInt(soundFrequencySliderElement.value), audioContext.currentTime);
-                    oscillator.connect(audioContext.destination);
-                    oscillator.start();
-                    
-                    updateSoundBars();
-                    playSoundBtnElement.disabled = true;
-                    stopSoundBtnElement.disabled = false;
-                });
-                
-                stopSoundBtnElement.addEventListener('click', function() {
-                    if (!isPlaying) return;
-                    
-                    isPlaying = false;
-                    if (oscillator) {
-                        oscillator.stop();
-                        oscillator.disconnect();
-                        oscillator = null;
-                    }
-                    if (soundVisualizationInterval) {
-                        clearInterval(soundVisualizationInterval);
-                        soundVisualizationInterval = null;
-                    }
-                    
-                    // Reset visualization
-                    const bars = document.querySelectorAll('.sound-bar');
-                    bars.forEach(bar => {
-                        bar.style.height = '0px';
-                    });
-                    
-                    playSoundBtnElement.disabled = false;
-                    stopSoundBtnElement.disabled = true;
-                });
-                
-                // Create initial bars
-                createSoundBars();
-                
-                // Handle window resize for sound bars
-                window.addEventListener('resize', createSoundBars);
-                
-            } catch (e) {
-                console.error('Audio API not supported:', e);
-                if (playSoundBtnElement) playSoundBtnElement.disabled = true;
-                if (stopSoundBtnElement) stopSoundBtnElement.disabled = true;
-                if (soundFrequencySliderElement) soundFrequencySliderElement.disabled = true;
-                if (soundVisualizationContainerElement) {
-                    soundVisualizationContainerElement.innerHTML = 
-                        '<p class="text-center text-red-500 p-4">Audio not supported in your browser</p>';
-                }
-            }
-        }
-        
-        // Update frequency display initially
-        // This needs to be called after soundFrequencySliderElement is defined
-        // soundFrequencyValueElement.textContent = `${soundFrequencySliderElement.value} Hz`;
+        // Function to start playing sound
+        function startSound() {
+            initializeAudioContext(); // Ensure context is initialized
+            if (isPlaying) return; // Prevent multiple plays
 
+            isPlaying = true;
+            oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(parseFloat(soundFrequencySliderElement.value), audioContext.currentTime);
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            
+            animationFrameId = requestAnimationFrame(updateSoundBars); // Start animation
+            playSoundBtnElement.disabled = true;
+            stopSoundBtnElement.disabled = false;
+        }
+
+        // Function to stop playing sound
+        function stopSound() {
+            if (!isPlaying) return;
+            
+            isPlaying = false;
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+                oscillator = null;
+            }
+            cancelAnimationFrame(animationFrameId); // Stop animation
+            
+            // Reset visualization
+            const bars = document.querySelectorAll('.sound-bar');
+            bars.forEach(bar => {
+                bar.style.height = '0px';
+            });
+            
+            playSoundBtnElement.disabled = false;
+            stopSoundBtnElement.disabled = true;
+        }
+        
 
         // --- High Contrast Toggle Logic ---
         const contrastToggle = document.getElementById('contrastToggle');
@@ -869,10 +852,9 @@
             const numPoints = 400; // Increased number of points for smoother curve and more cycles
             const xMax = 400; // Max value for x-axis to show more cycles
             const waveData = {
-                labels: Array.from({length: numPoints}, (_, i) => i * (xMax / numPoints)), // X-axis points, scaled
                 datasets: [{
                     label: 'Waveform',
-                    data: Array(numPoints).fill(0), // Initialize with zeros
+                    data: [], // Data will be objects with {x, y}
                     borderColor: '#3b82f6',
                     borderWidth: 2,
                     pointRadius: 0,
@@ -883,13 +865,14 @@
             
             // Chart configuration
             const waveConfig = {
-                type: 'line',
+                type: 'line', // Use 'line' type for continuous lines
                 data: waveData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         x: {
+                            type: 'linear', // Use linear scale for continuous x-axis
                             display: true,
                             title: {
                                 display: true,
@@ -953,7 +936,14 @@
                     oscillator.frequency.setValueAtTime(parseFloat(soundFrequencySliderElement.value), audioContext.currentTime);
                 }
             });
-            playSoundBtnElement.addEventListener('click', initAudio); // Call initAudio on first click
+            
+            // Initial call to create bars
+            createSoundBars();
+            // Handle window resize for sound bars
+            window.addEventListener('resize', createSoundBars);
+
+            // Attach event listeners to buttons
+            playSoundBtnElement.addEventListener('click', startSound);
             stopSoundBtnElement.addEventListener('click', stopSound);
 
             // Set initial state for sound buttons
