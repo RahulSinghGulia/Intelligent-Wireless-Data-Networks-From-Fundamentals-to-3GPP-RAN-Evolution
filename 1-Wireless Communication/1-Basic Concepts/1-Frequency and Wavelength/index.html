@@ -1,4 +1,4 @@
-Complete this: <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,9 +13,6 @@ Complete this: <!DOCTYPE html>
     <script type="text/javascript" id="MathJax-script" async
             src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
-    
-    <!-- Chart.js for enhanced wave plotting -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         body {
@@ -74,20 +71,6 @@ Complete this: <!DOCTYPE html>
         .input-group input:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-        .plot-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 2rem auto;
-            background-color: #fff;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-        }
-        .plot-canvas {
-            display: block;
-            width: 100%;
-            height: 300px;
         }
         .svg-diagram {
             display: block;
@@ -370,26 +353,6 @@ Complete this: <!DOCTYPE html>
             <p class="text-gray-700">
                 A notable example is the speed of light in a vacuum, denoted by $c$, which is approximately $3 \times 10^8$ meters per second. All electromagnetic waves (radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, gamma rays) travel at this speed in a vacuum. This means for light, $c = f \cdot \lambda$.
             </p>
-
-            <div class="plot-container">
-                <h3 class="text-xl font-semibold text-slate-800 mb-4 text-center">Visualizing Wave Properties</h3>
-                <canvas id="wavePlot" class="plot-canvas" aria-label="Interactive wave visualization chart"></canvas>
-                <div class="flex flex-col sm:flex-row justify-center items-center mt-4 gap-4">
-                    <div class="flex items-center">
-                        <label for="plotFrequency" class="font-medium text-slate-700 mr-2">Frequency:</label>
-                        <input type="range" id="plotFrequency" min="0.5" max="5" step="0.1" value="1" class="w-32">
-                        <span id="plotFrequencyValue" class="font-semibold text-blue-600 ml-2 min-w-[50px]">1 Hz</span>
-                    </div>
-                    <div class="flex items-center">
-                        <label for="plotSpeed" class="font-medium text-slate-700 mr-2">Speed:</label>
-                        <input type="range" id="plotSpeed" min="50" max="200" step="10" value="100" class="w-32">
-                        <span id="plotSpeedValue" class="font-semibold text-blue-600 ml-2 min-w-[50px]">100 m/s</span>
-                    </div>
-                </div>
-                <p class="text-sm text-center text-gray-500 mt-2">
-                    Adjust the sliders to see how changing frequency and speed affect the wavelength.
-                </p>
-            </div>
         </section>
 
         <!-- Electromagnetic Spectrum Section -->
@@ -551,45 +514,6 @@ Complete this: <!DOCTYPE html>
     </footer>
 
     <script>
-        // --- Wave Plotting with Chart.js ---
-        let waveChart;
-        let waveCanvas, waveCtx, plotFrequencySlider, plotFrequencyValue, plotSpeedSlider, plotSpeedValue;
-
-        // Adjusted parameters for better visualization
-        const AMPLITUDE_PLOT = 50;  // Reduced amplitude to fit better in the plot
-        const Y_AXIS_MIN = -60;     // Adjusted to be slightly larger than amplitude
-        const Y_AXIS_MAX = 60;      // Adjusted to be slightly larger than amplitude
-        const NUM_POINTS = 200;     // Number of points to plot
-        const X_MAX = 200;          // Maximum x-value to show
-
-        function updateWavePlot() {
-            if (!waveChart) return;
-
-            const frequency = parseFloat(plotFrequencySlider.value);
-            const speed = parseFloat(plotSpeedSlider.value);
-            const wavelength = speed / frequency;
-            
-            plotFrequencyValue.textContent = `${frequency} Hz`;
-            plotSpeedValue.textContent = `${speed} m/s`;
-            
-            // Generate wave data with fixed amplitude
-            const newData = [];
-            for (let i = 0; i <= NUM_POINTS; i++) {
-                const xValue = i * (X_MAX / NUM_POINTS);
-                const yValue = AMPLITUDE_PLOT * Math.sin(2 * Math.PI * frequency * xValue / speed);
-                newData.push({x: xValue, y: yValue});
-            }
-            
-            waveChart.data.datasets[0].data = newData;
-            waveChart.options.scales.x.title.text = `Distance (m) | λ = ${wavelength.toFixed(2)} m`;
-            
-            // Ensure fixed y-axis limits
-            waveChart.options.scales.y.min = Y_AXIS_MIN;
-            waveChart.options.scales.y.max = Y_AXIS_MAX;
-            
-            waveChart.update();
-        }
-
         // --- Sound Wave Visualization ---
         let audioContext;
         let oscillator;
@@ -599,7 +523,7 @@ Complete this: <!DOCTYPE html>
         let soundFrequencySliderElement, soundFrequencyValueElement, 
             playSoundBtnElement, stopSoundBtnElement, soundVisualizationContainerElement;
 
-                function initializeAudio() {
+        function initializeAudio() {
             soundFrequencySliderElement = document.getElementById('soundFrequency');
             soundFrequencyValueElement = document.getElementById('soundFrequencyValue');
             playSoundBtnElement = document.getElementById('playSoundBtn');
@@ -736,91 +660,12 @@ Complete this: <!DOCTYPE html>
 
         // --- Window Resize Handling ---
         function handleResize() {
-            if (waveChart) {
-                waveChart.resize();
-            }
             createSoundBars();
             updateSoundVisualization(soundFrequencySliderElement.value);
         }
 
         // --- Initialize Everything ---
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize wave plot
-            waveCanvas = document.getElementById('wavePlot');
-            waveCtx = waveCanvas.getContext('2d');
-            plotFrequencySlider = document.getElementById('plotFrequency');
-            plotFrequencyValue = document.getElementById('plotFrequencyValue');
-            plotSpeedSlider = document.getElementById('plotSpeed');
-            plotSpeedValue = document.getElementById('plotSpeedValue');
-            
-            // Create initial wave chart
-            waveChart = new Chart(waveCtx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: 'Waveform',
-                        borderColor: '#3b82f6',
-                        borderWidth: 2,
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        pointRadius: 0,
-                        tension: 0.4,
-                        data: []
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            type: 'linear',
-                            position: 'bottom',
-                            min: 0,
-                            max: X_MAX,
-                            title: {
-                                display: true,
-                                text: 'Distance (m)',
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: '#e2e8f0'
-                            }
-                        },
-                        y: {
-                            min: Y_AXIS_MIN,
-                            max: Y_AXIS_MAX,
-                            title: {
-                                display: true,
-                                text: 'Amplitude',
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: '#e2e8f0'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Amplitude: ${context.parsed.y.toFixed(2)}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Set up event listeners for wave plot controls
-            plotFrequencySlider.addEventListener('input', updateWavePlot);
-            plotSpeedSlider.addEventListener('input', updateWavePlot);
-            
-            // Initialize with default values
-            updateWavePlot();
-            
             // Set up other functionality
             initializeAudio();
             setupTabs();
