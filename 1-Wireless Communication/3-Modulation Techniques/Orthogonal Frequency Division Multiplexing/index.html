@@ -231,11 +231,20 @@
         </header>
 
         <section id="introduction">
-            <h2>1. What is OFDM?</h2>
-            <p>Orthogonal Frequency-Division Multiplexing (OFDM) is a method of encoding digital data on multiple carrier frequencies. It's a key technology in modern wireless communication standards like Wi-Fi (802.11), 4G LTE, and 5G. OFDM divides a high-rate data stream into several lower-rate streams, which are then transmitted simultaneously over multiple subcarriers. This makes the system more robust to frequency-selective fading and inter-symbol interference (ISI).</p>
-            <p>The core idea behind OFDM is to achieve orthogonality between subcarriers, meaning that the peak of one subcarrier's spectrum aligns with the nulls of all other subcarriers' spectra. This allows subcarriers to overlap without causing inter-carrier interference (ICI), leading to efficient spectrum utilization.</p>
+            <h2>1. What is OFDM, and why is it used?</h2>
+            <p>Orthogonal Frequency-Division Multiplexing (OFDM) is a method of encoding digital data on multiple carrier frequencies. It's a key technology in modern wireless communication standards like Wi-Fi (802.11), 4G LTE, and 5G.</p>
+            <p>
+                **Why OFDM is Used:** OFDM's primary advantage is its robustness against **frequency-selective fading** and **inter-symbol interference (ISI)**, which are common problems in wireless channels caused by multipath propagation. Instead of transmitting data on a single wideband carrier, OFDM divides a high-rate data stream into several lower-rate streams, which are then transmitted simultaneously over multiple, closely spaced **subcarriers**. This makes each subcarrier experience relatively **flat fading**, simplifying equalization.
+            </p>
 
-            <h3>1.1 Subcarrier Visualization: FDM vs. OFDM</h3>
+            <h3>1.1 OFDM vs. Traditional FDM</h3>
+            <p>
+                **How does OFDM differ from traditional FDM (Frequency Division Multiplexing)?**
+                In traditional FDM, different data streams are modulated onto separate carrier frequencies, which are then transmitted in parallel. To prevent interference, these carriers must be separated by significant **guard bands**, leading to inefficient spectrum utilization.
+            </p>
+            <p>
+                OFDM, in contrast, achieves **orthogonality** between subcarriers, meaning that their spectra can overlap without causing inter-carrier interference (ICI). This is the key difference that allows OFDM to be significantly more spectrally efficient than traditional FDM.
+            </p>
             <div class="controls">
                 <button id="showTraditionalFdm">Traditional FDM</button>
                 <button id="showOfdm">OFDM (Orthogonal)</button>
@@ -247,8 +256,19 @@
         </section>
 
         <section id="orthogonality">
-            <h2>2. Key Principle: Orthogonality</h2>
-            <p>Orthogonality in OFDM is achieved by precisely spacing the subcarrier frequencies such that at the sampling instant of the FFT/IFFT, each subcarrier has an integer number of cycles within the symbol duration, and all other subcarriers have zero amplitude. This means they do not interfere with each other despite spectral overlap.</p>
+            <h2>2. Key Principle: Orthogonality & Subcarrier Spacing</h2>
+            <p>
+                **Explain the concept of orthogonality in OFDM:**
+                Orthogonality in OFDM means that each subcarrier's spectrum has nulls (zero amplitude) precisely at the center frequencies of all other subcarriers. This precise spacing ensures that despite spectral overlap, the signals on different subcarriers do not interfere with each other when sampled at the correct instants at the receiver.
+            </p>
+            <p>
+                **What are subcarriers in OFDM, and how are they spaced?**
+                Subcarriers are individual narrowband carrier frequencies onto which portions of the data stream are modulated. They are spaced at multiples of $1/T_{symbol}$, where $T_{symbol}$ is the useful symbol duration. This spacing ensures that the subcarriers are mathematically orthogonal over the symbol duration.
+            </p>
+            <p>
+                **What is the role of the IFFT/FFT in OFDM?**
+                The Fast Fourier Transform (FFT) and its inverse (IFFT) are central to OFDM. At the transmitter, the **IFFT** (Inverse Fast Fourier Transform) converts the frequency-domain modulated data symbols (one symbol per subcarrier) into a time-domain OFDM signal. At the receiver, the **FFT** (Fast Fourier Transform) converts the received time-domain signal back into the frequency domain, separating the individual subcarrier signals for demodulation. This efficient implementation of modulation and demodulation is what makes OFDM practical.
+            </p>
             <div class="controls">
                 <button id="showSingleSubcarrier">Single Subcarrier</button>
                 <button id="showMultipleSubcarriers">Multiple Orthogonal Subcarriers</button>
@@ -260,13 +280,31 @@
         </section>
 
         <section id="cyclic-prefix">
-            <h2>3. Mitigating ISI: The Cyclic Prefix (CP)</h2>
-            <p>In wireless channels, signals can arrive at the receiver via multiple paths, leading to time dispersion (multipath delay spread). This can cause Inter-Symbol Interference (ISI) and Inter-Carrier Interference (ICI) if not properly handled.</p>
-            <p>The Cyclic Prefix (CP) is a copy of the end portion of an OFDM symbol that is appended to the beginning of the symbol. It serves two main purposes:</p>
+            <h2>3. Mitigating ISI & Multipath: The Cyclic Prefix (CP)</h2>
+            <p>
+                In wireless channels, signals can arrive at the receiver via multiple paths, leading to time dispersion (multipath delay spread). This can cause Inter-Symbol Interference (ISI) and Inter-Carrier Interference (ICI) if not properly handled.
+            </p>
+            <p>
+                **Why is OFDM robust to multipath fading?**
+                OFDM's robustness to multipath fading comes from two key aspects:
+                <ol>
+                    <li>**Conversion of Frequency-Selective to Flat Fading:** By dividing the wideband channel into many narrow subchannels (subcarriers), each individual subcarrier experiences relatively **flat fading**. This means the gain and phase shift across each subcarrier's narrow bandwidth are nearly constant, simplifying equalization.</li>
+                    <li>**Use of Cyclic Prefix (CP):** The CP effectively extends the symbol duration, acting as a guard interval to absorb multipath delays.</li>
+                </ol>
+            </p>
+            <p>
+                **Why is a cyclic prefix (CP) added in OFDM?**
+                The Cyclic Prefix (CP) is a copy of the end portion of an OFDM symbol that is appended to the beginning of the symbol. It serves two crucial purposes:
+            </p>
             <ol>
-                <li>It acts as a **guard interval**, absorbing multipath delays and ensuring that the useful part of the OFDM symbol (after the CP is removed at the receiver) is free from ISI caused by the previous symbol.</li>
-                <li>It converts the linear convolution of the signal with the channel into a **circular convolution**, which can be easily compensated for in the frequency domain using a simple one-tap equalizer for each subcarrier.</li>
+                <li>It acts as a **guard interval**, absorbing multipath delays and ensuring that the useful part of the OFDM symbol (after the CP is removed at the receiver) is free from ISI caused by the previous symbol. Any delayed versions of the previous symbol will arrive within the CP duration of the current symbol.</li>
+                <li>It converts the linear convolution of the signal with the channel into a **circular convolution**. This property is vital because circular convolution can be easily compensated for in the frequency domain using a simple one-tap equalizer for each subcarrier (a scalar multiplication), as opposed to complex time-domain equalizers needed for linear convolution.</li>
             </ol>
+            <p>
+                **OFDM: Signal bandwidth, What if CP < max channel delay spread?**
+                The length of the Cyclic Prefix ($T_{CP}$) must be greater than or equal to the maximum channel delay spread ($\tau_{max}$).
+                If $T_{CP} < \tau_{max}$, then delayed versions of the signal from previous symbols will spill over into the useful part of the current symbol (after the CP is removed), leading to **Inter-Symbol Interference (ISI)**. This can also cause **Inter-Carrier Interference (ICI)**, as the orthogonality among subcarriers will be destroyed. This scenario significantly degrades system performance.
+            </p>
             <div class="controls">
                 <button id="showWithoutCp">Symbol Without CP</button>
                 <button id="showWithCp">Symbol With CP</button>
@@ -307,19 +345,38 @@
         <section id="challenges">
             <h2>5. OFDM Challenges and Impairments</h2>
             <div class="tab-buttons">
-                <button class="tab-button active" data-tab="pap">PAPR</button>
+                <button class="tab-button active" data-tab="papr">PAPR</button>
                 <button class="tab-button" data-tab="foffset">Frequency Offset</button>
                 <button class="tab-button" data-tab="timing">Timing Offset</button>
                 <button class="tab-button" data-tab="channel">Channel Estimation</button>
             </div>
 
-            <div id="pap-tab" class="tab-content active">
+            <div id="papr-tab" class="tab-content active">
                 <h3>5.1 Peak-to-Average Power Ratio (PAPR)</h3>
-                <p>OFDM signals, being a sum of many independent subcarriers, can exhibit a high Peak-to-Average Power Ratio (PAPR). This means the instantaneous power can be much higher than the average power. High PAPR is undesirable because it requires power amplifiers with high linearity, which are expensive and consume more power. This chart illustrates a signal with high PAPR.</p>
+                <p>
+                    **Explain the PAPR (Peak-to-Average Power Ratio) problem in OFDM:**
+                    OFDM signals are generated by summing many independent subcarriers. When these subcarriers add up constructively (i.e., their peaks align in phase), the instantaneous peak power of the combined signal can be significantly higher than its average power. This ratio is known as the Peak-to-Average Power Ratio (PAPR). High PAPR is undesirable because:
+                    <ol>
+                        <li>It requires power amplifiers (PAs) with a very high linearity range, which are typically expensive and less power-efficient.</li>
+                        <li>Non-linearities in the PA can cause signal distortion, leading to spectral regrowth (out-of-band emissions) and inter-carrier interference (ICI), degrading performance.</li>
+                    </ol>
+                </p>
                 <div class="chart-container">
                     <canvas id="paprChart"></canvas>
                 </div>
                 <p>The signal peaks significantly above its average power level, demonstrating the PAPR issue.</p>
+                <h3>5.1.1 Techniques to Reduce PAPR</h3>
+                <p>
+                    Several techniques have been developed to mitigate the high PAPR problem in OFDM systems:
+                    <ul>
+                        <li>**Clipping and Filtering:** The simplest method where the signal peaks above a certain threshold are simply clipped. While effective in reducing PAPR, it introduces in-band distortion and out-of-band radiation (spectral regrowth).</li>
+                        <li>**Selected Mapping (SLM):** Multiple candidate OFDM symbols are generated for the same data by applying different phase rotation sequences. The symbol with the lowest PAPR is then selected for transmission.</li>
+                        <li>**Partial Transmit Sequences (PTS):** The data block is partitioned into several disjoint sub-blocks, and each sub-block is rotated by a phase factor. These phase-rotated sub-blocks are then combined to form an OFDM symbol, and the combination that yields the lowest PAPR is chosen.</li>
+                        <li>**Active Constellation Extension (ACE):** This method extends the constellation points outward for a limited number of subcarriers, reducing the likelihood of high peaks.</li>
+                        <li>**Tone Reservation (TR):** A small set of subcarriers are reserved and used to transmit a peak-reducing signal, without carrying actual data.</li>
+                    </ul>
+                    These techniques aim to find a trade-off between PAPR reduction, computational complexity, and performance degradation.
+                </p>
             </div>
 
             <div id="foffset-tab" class="tab-content">
@@ -342,7 +399,14 @@
 
             <div id="channel-tab" class="tab-content">
                 <h3>5.4 Channel Estimation and Equalization</h3>
-                <p>Wireless channels introduce distortions (fading, multipath). To correctly decode the received signal, the receiver needs to estimate the channel's characteristics (Channel Frequency Response - CFR) and then apply an equalizer to compensate for these distortions. This chart shows a typical channel response and an estimated response.</p>
+                <p>
+                    **OFDM: How is the channel determined and equalized for each subcarrier?**
+                    Wireless channels introduce distortions (fading, multipath) that vary across different subcarriers. To correctly decode the received signal, the receiver needs to compensate for these distortions. This is achieved through:
+                    <ol>
+                        <li>**Channel Estimation:** The receiver estimates the Channel Frequency Response (CFR) for each subcarrier. This is typically done by transmitting known symbols called **pilot symbols** or **training sequences** on specific subcarriers. By comparing the received pilot symbols with their known transmitted values, the receiver can infer the channel's gain and phase distortion on those subcarriers. For the data subcarriers without pilots, the channel response is estimated through interpolation.</li>
+                        <li>**Equalization:** Once the CFR for each subcarrier is estimated, an equalizer is applied. Because each subcarrier effectively experiences flat fading, equalization in OFDM is significantly simplified. It often involves a simple **one-tap equalizer** for each subcarrier, which is essentially a complex scalar multiplication or division in the frequency domain. The received symbol on a subcarrier is multiplied by the inverse of the estimated channel gain for that subcarrier (e.g., in Zero-Forcing) or by a more complex factor (e.g., in MMSE).</li>
+                    </ol>
+                </p>
                 <div class="chart-container">
                     <canvas id="channelChart"></canvas>
                 </div>
@@ -1465,7 +1529,7 @@
 
                     // Update the chart for the active tab
                     switch(tabId) {
-                        case 'pap':
+                        case 'papr':
                             updatePaprChart();
                             break;
                         case 'foffset':
@@ -1487,27 +1551,6 @@
             // High contrast toggle
             document.getElementById('contrastToggle').addEventListener('click', function() {
                 document.body.classList.toggle('high-contrast');
-
-                // The inline style changes are handled by the CSS for cleaner separation
-                // The provided JS had inline style changes, but it's better to manage via CSS classes.
-                // Leaving the previous JS style changes commented out for reference if needed
-                /*
-                if (document.body.classList.contains('high-contrast')) {
-                    document.body.style.backgroundColor = '#000';
-                    document.body.style.color = '#fff';
-                    document.querySelectorAll('section').forEach(section => {
-                        section.style.backgroundColor = '#111';
-                        section.style.color = '#fff';
-                    });
-                } else {
-                    document.body.style.backgroundColor = '#f8fafc';
-                    document.body.style.color = '#334155';
-                    document.querySelectorAll('section').forEach(section => {
-                        section.style.backgroundColor = '#fff';
-                        section.style.color = '#334155';
-                    });
-                }
-                */
             });
         }
 
