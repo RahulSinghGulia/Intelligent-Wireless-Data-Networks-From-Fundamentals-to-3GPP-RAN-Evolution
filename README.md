@@ -20,7 +20,7 @@ Explore core concepts in wireless, data, and networking. Discover AI/ML's transf
 * Frequency Modulation (FM)
 * Phase Modulation (PM)
 * Quadrature Amplitude Modulation (QAM)
-* Orthogonal Frequency Division Multiplexing (OFDM): [https://rahulsinghgulia.github.io/Intelligent-Wireless-Data-Networks-From-Fundamentals-to-3GPP-RAN-Evolution/tree/main/1-Wireless%20Communication/3-Modulation%20Techniques/Orthogonal%20Frequency%20Division%20Multiplexing](https://rahulsinghgulia.github.io/Intelligent-Wireless-Data-Networks-From-Fundamentals-to-3GPP-RAN-Evolution/tree/main/1-Wireless%20Communication/3-Modulation%20Techniques/Orthogonal%20Frequency%20Division%20Multiplexing)
+* Orthogonal Frequency Division Multiplexing (OFDM): [https://rahulsinghgulia.github.io/Intelligent-Wireless-Data-Networks-From-Fundamentals-to-3GPP-RAN-Evolution/blob/main/1-Wireless%20Communication/3-Modulation%20Techniques/Orthogonal%20Frequency%20Division%20Multiplexing/](https://rahulsinghgulia.github.io/Intelligent-Wireless-Data-Networks-From-Fundamentals-to-3GPP-RAN-Evolution/blob/main/1-Wireless%20Communication/3-Modulation%20Techniques/Orthogonal%20Frequency%20Division%20Multiplexing/)
 
 ### 4. Wireless Channel Characteristics:
 * Signal-to-Noise Ratio (SNR)
